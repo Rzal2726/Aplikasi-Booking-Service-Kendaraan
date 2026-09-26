@@ -1,0 +1,35 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "email": "user@example.com"
+        }
+    ],
+    "vehicles": [
+        {
+            "id": 1,
+            "make": "Honda",
+            "model": "Beat",
+            "year": 2020
+        }
+    ],
+    "services": [
+        {
+            "id": 1,
+            "name": "Oil Change",
+            "description": "Complete oil change service",
+            "price": 50.0
+        }
+    ],
+    "activities": [
+        {
+            "id": 1,
+            "userId": 1,
+            "vehicleId": 1,
+            "serviceId": 1,
+            "date": "2024-06-01T10:00:00Z",
+            "status": "completed"
+        }
+    ]
+}
