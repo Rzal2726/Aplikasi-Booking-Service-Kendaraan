@@ -4,6 +4,8 @@ class ServiceScreenController extends GetxController {
   //TODO: Implement ServiceScreenController
 
   final count = 0.obs;
+
+  RxList serviceList = [].obs;
   @override
   void onInit() {
     super.onInit();

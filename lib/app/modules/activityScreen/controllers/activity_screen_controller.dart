@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 class ActivityScreenController extends GetxController {
   //TODO: Implement ActivityScreenController
 
-  final count = 0.obs;
+  RxList activityList = [].obs;
   @override
   void onInit() {
     super.onInit();
@@ -18,6 +18,4 @@ class ActivityScreenController extends GetxController {
   void onClose() {
     super.onClose();
   }
-
-  void increment() => count.value++;
 }

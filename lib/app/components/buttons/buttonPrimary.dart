@@ -26,6 +26,7 @@ class _ButtonPrimaryState extends State<ButtonPrimary> {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
+        elevation: 0,
         backgroundColor: widget.color ?? AppColors.primaryColor,
         foregroundColor: widget.textColor ?? Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),

@@ -1,35 +1,67 @@
 {
-    "users": [
-        {
-            "id": 1,
-            "name": "John Doe",
-            "email": "user@example.com"
-        }
-    ],
-    "vehicles": [
-        {
-            "id": 1,
-            "make": "Honda",
-            "model": "Beat",
-            "year": 2020
-        }
-    ],
-    "services": [
-        {
-            "id": 1,
-            "name": "Oil Change",
-            "description": "Complete oil change service",
-            "price": 50.0
-        }
-    ],
-    "activities": [
-        {
-            "id": 1,
-            "userId": 1,
-            "vehicleId": 1,
-            "serviceId": 1,
-            "date": "2024-06-01T10:00:00Z",
-            "status": "completed"
-        }
-    ]
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "user@example.com",
+      "password": "12345678"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": 1,
+      "brand": "Honda",
+      "number": "B 1234 XYZ",
+      "model": "Beat",
+      "year": 2020,
+      "odometer": 150,
+      "isMain": true
+    }
+  ],
+  "brand": [
+    { "id": 1, "brand": "Honda" },
+    { "id": 2, "brand": "Yamaha" }
+  ],
+  "model": [
+    { "id": 1, "brandId": 1, "model": "Beat" },
+    { "id": 2, "brandId": 1, "model": "Vario" },
+    { "id": 3, "brandId": 2, "model": "Vixion" },
+    { "id": 4, "brandId": 2, "model": "R15" }
+  ],
+  "services": [
+    {
+      "id": 1,
+      "name": "Servis Berkala",
+      "description": "Pembersihan total, throttle body & busi",
+      "price": 105000.0
+    },
+    {
+      "id": 2,
+      "name": "Ganti Oli",
+      "description": "Servis kilat & reset indikator oil trip",
+      "price": 55000.0
+    },
+    {
+      "id": 3,
+      "name": "Servis CVT",
+      "description": "Bongkar roller, v-belt & gemuk baru",
+      "price": 65000.0
+    },
+    {
+      "id": 4,
+      "name": "Tune Up Injeksi",
+      "description": "Kalibraasi injector & diagnostik ECU",
+      "price": 45000.0
+    }
+  ],
+  "activities": [
+    {
+      "id": 1,
+      "userId": 1,
+      "vehicleId": 1,
+      "serviceId": 1,
+      "date": "2024-06-01T10:00:00Z",
+      "status": "completed"
+    }
+  ]
 }

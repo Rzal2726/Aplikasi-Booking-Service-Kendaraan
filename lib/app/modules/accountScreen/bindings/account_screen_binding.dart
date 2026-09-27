@@ -5,8 +5,6 @@ import '../controllers/account_screen_controller.dart';
 class AccountScreenBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<AccountScreenController>(
-      () => AccountScreenController(),
-    );
+    Get.lazyPut<AccountScreenController>(() => AccountScreenController());
   }
 }
