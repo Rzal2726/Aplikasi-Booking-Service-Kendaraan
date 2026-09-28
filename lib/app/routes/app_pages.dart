@@ -4,6 +4,8 @@ import '../modules/accountScreen/bindings/account_screen_binding.dart';
 import '../modules/accountScreen/views/account_screen_view.dart';
 import '../modules/activityScreen/bindings/activity_screen_binding.dart';
 import '../modules/activityScreen/views/activity_screen_view.dart';
+import '../modules/bookConfirm/bindings/book_confirm_binding.dart';
+import '../modules/bookConfirm/views/book_confirm_view.dart';
 import '../modules/bookReview/bindings/book_review_binding.dart';
 import '../modules/bookReview/views/book_review_view.dart';
 import '../modules/bookSchedule/bindings/book_schedule_binding.dart';
@@ -78,6 +80,11 @@ class AppPages {
       name: _Paths.ACCOUNT_SCREEN,
       page: () => const AccountScreenView(),
       binding: AccountScreenBinding(),
+    ),
+    GetPage(
+      name: _Paths.BOOK_CONFIRM,
+      page: () => const BookConfirmView(),
+      binding: BookConfirmBinding(),
     ),
   ];
 }

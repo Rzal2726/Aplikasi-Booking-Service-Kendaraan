@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:project/app/components/AppIcon.dart';
 import 'package:project/app/components/appbar/homeAppbar.dart';
 import 'package:project/app/components/buttons/buttonPrimary.dart';
 import 'package:project/app/components/cards/badgeBasic.dart';
 import 'package:project/app/components/cards/cardBasic.dart';
 import 'package:project/app/components/cards/emptyCard.dart';
-import 'package:project/app/components/mainAppbar.dart';
 import 'package:project/app/const/appcolors.dart';
 import 'package:project/app/modules/accountScreen/views/account_screen_view.dart';
 import 'package:project/app/modules/activityScreen/views/activity_screen_view.dart';
 import 'package:project/app/modules/garageScreen/views/garage_screen_view.dart';
 import 'package:project/app/modules/serviceScreen/views/service_screen_view.dart';
 import 'package:project/app/routes/app_pages.dart';
+import 'package:project/app/services/formatter.dart';
 
 import '../controllers/home_screen_controller.dart';
 
@@ -286,26 +287,6 @@ class HomeScreenView extends GetView<HomeScreenController> {
               isActive: controller.pageIndex.value == 2,
             ),
           ),
-          Obx(
-            () => actionButton(
-              icon: Icons.article_outlined,
-              label: "Aktivitas",
-              onPressed: () {
-                controller.pageIndex.value = 3;
-              },
-              isActive: controller.pageIndex.value == 3,
-            ),
-          ),
-          Obx(
-            () => actionButton(
-              icon: Icons.account_circle_outlined,
-              label: "Akun",
-              onPressed: () {
-                controller.pageIndex.value = 4;
-              },
-              isActive: controller.pageIndex.value == 4,
-            ),
-          ),
         ],
       ),
     );
@@ -564,10 +545,12 @@ class HomeScreenView extends GetView<HomeScreenController> {
             ],
           ),
           Obx(() {
-            final serviceList = controller.serviceController.serviceList;
-            if (serviceList.isEmpty) {
+            final activityList = controller.activityController.activityList
+                .where((data) => data['status'] == "inprogress")
+                .toList();
+            if (activityList.isEmpty) {
               return EmptyCard(
-                message: "Tidak ada servis yang sedang berlangsung",
+                message: "Belum ada aktivitas",
                 actionButton: ButtonPrimary(
                   onPressed: () {
                     Get.toNamed(Routes.BOOK_SCREEN);
@@ -577,7 +560,163 @@ class HomeScreenView extends GetView<HomeScreenController> {
                 ),
               );
             } else {
-              return Container();
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: activityList.length,
+                itemBuilder: (context, index) {
+                  final activity = activityList[index];
+                  DateTime date = DateTime.parse(activity['date']);
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 4.0,
+                          offset: const Offset(0, 0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                            ),
+                            color: AppColors.backgroundSwatch.shade200,
+                          ),
+                          child: Row(
+                            spacing: 8,
+                            children: [
+                              Icon(Icons.calendar_month),
+                              Expanded(
+                                child: Text(
+                                  "${date.day}/${date.month}/${date.year}",
+                                ),
+                              ),
+                              Text(
+                                "${activity['activities'].length} Motor",
+                                style: TextStyle(
+                                  color: AppColors.primaryColor.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: 8,
+                            children: [
+                              // Text(activity.toString()),
+                              if (activity['activities'].length > 1) ...[
+                                ...activity['activities'].map((data) {
+                                  return Container(
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      color:
+                                          AppColors.backgroundSwatch.shade200,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          spacing: 8,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                "${controller.garageController.getVehicleById(data['vehicleID'])['brand']} ${controller.garageController.getVehicleById(data['vehicleID'])['model']}",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                            BasicBadge(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              backgroundColor: AppColors
+                                                  .primaryColor
+                                                  .shade100,
+                                              content: Text(
+                                                "${(data['status'] / 5 * 100).toInt()}% Selesai",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 12,
+                                                  color: AppColors
+                                                      .primaryColor
+                                                      .shade800,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF1E293B),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            controller.garageController
+                                                    .getVehicleById(
+                                                      data['vehicleID'],
+                                                    )['number'] ??
+                                                '',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.0,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        LinearProgressIndicator(
+                                          value: data['status'] / 5,
+                                          color:
+                                              AppColors.primaryColor.shade800,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          minHeight: 8,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              ],
+                              SizedBox(
+                                width: double.infinity,
+                                child: ButtonPrimary(
+                                  onPressed: () {},
+                                  text: "Live Tracking",
+                                  icon: Icon(Icons.track_changes_outlined),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
             }
           }),
         ],
@@ -627,7 +766,82 @@ class HomeScreenView extends GetView<HomeScreenController> {
                 ),
               );
             } else {
-              return Container();
+              return SizedBox(
+                height: 122,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: vehicleList.length,
+                  itemBuilder: (context, index) {
+                    final vehicle = vehicleList[index];
+                    return Container(
+                      width: 220, // Set a fixed width for horizontal cards
+                      margin: EdgeInsets.only(
+                        left: index == 0 ? 16 : 8, // Proper edge padding
+                        right: index == vehicleList.length - 1 ? 16 : 8,
+                      ),
+                      child: BasicCard(
+                        content: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceBetween, // Distribute content evenly
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const AppIcon(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1E293B),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    vehicle['number'] ?? '',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${vehicle['brand']} ${vehicle['model']}",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Odometer: ${vehicle['odometer']} KM",
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
             }
           }),
         ],
@@ -650,7 +864,7 @@ class HomeScreenView extends GetView<HomeScreenController> {
               ),
               GestureDetector(
                 onTap: () {
-                  controller.pageIndex.value = 3;
+                  controller.pageIndex.value = 1;
                 },
                 child: Container(
                   child: Text(
@@ -665,8 +879,11 @@ class HomeScreenView extends GetView<HomeScreenController> {
               ),
             ],
           ),
+          SizedBox(height: 8),
           Obx(() {
-            final activityList = controller.activityController.activityList;
+            final activityList = controller.activityController.activityList
+                .where((data) => data['status'] != "inprogress")
+                .toList();
             if (activityList.isEmpty) {
               return EmptyCard(
                 message: "Belum ada aktivitas",
@@ -679,7 +896,130 @@ class HomeScreenView extends GetView<HomeScreenController> {
                 ),
               );
             } else {
-              return Container();
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: activityList.length,
+                itemBuilder: (context, index) {
+                  final activity = activityList[index];
+                  DateTime date = DateTime.parse(activity['date']);
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 4.0,
+                          offset: const Offset(0, 0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                            ),
+                            color: AppColors.backgroundSwatch.shade200,
+                          ),
+                          child: Row(
+                            spacing: 8,
+                            children: [
+                              Icon(Icons.calendar_month),
+                              Expanded(
+                                child: Text(
+                                  "${date.day}/${date.month}/${date.year}",
+                                ),
+                              ),
+                              BasicBadge(
+                                backgroundColor: AppColors.primaryColor.shade50,
+                                content: Text(
+                                  activity['status'].toString().toUpperCase(),
+                                  style: TextStyle(
+                                    color: AppColors.primaryColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: 8,
+                            children: [
+                              // Text(activity.toString()),
+                              if (activity['activities'].length > 1) ...[
+                                Text(
+                                  "${activity['activities'].length} Motor Sekaligus",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      ...activity['activities'].map(
+                                        (data) => TextSpan(
+                                          text:
+                                              "${controller.garageController.getVehicleById(data['vehicleID'])['brand']} ${controller.garageController.getVehicleById(data['vehicleID'])['model']}\n",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ] else ...[
+                                Text(
+                                  "${controller.garageController.getVehicleById(activity['activities'].first['vehicleID'])}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "Total Biaya: ",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text:
+                                          "${formatRupiah(activity['totalPrice'])}",
+                                      style: TextStyle(
+                                        color: AppColors.primaryColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: double.infinity),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
             }
           }),
         ],

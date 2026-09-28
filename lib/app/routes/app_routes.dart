@@ -13,6 +13,7 @@ abstract class Routes {
   static const BOOK_VEHICLE = _Paths.BOOK_VEHICLE;
   static const ACTIVITY_SCREEN = _Paths.ACTIVITY_SCREEN;
   static const ACCOUNT_SCREEN = _Paths.ACCOUNT_SCREEN;
+  static const BOOK_CONFIRM = _Paths.BOOK_CONFIRM;
 }
 
 abstract class _Paths {
@@ -27,4 +28,5 @@ abstract class _Paths {
   static const BOOK_VEHICLE = '/book-vehicle';
   static const ACTIVITY_SCREEN = '/activity-screen';
   static const ACCOUNT_SCREEN = '/account-screen';
+  static const BOOK_CONFIRM = '/book-confirm';
 }

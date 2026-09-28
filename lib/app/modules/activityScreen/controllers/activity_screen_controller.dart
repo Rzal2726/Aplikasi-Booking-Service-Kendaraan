@@ -1,21 +1,18 @@
 import 'package:get/get.dart';
+import 'package:project/app/services/storage_service.dart';
 
 class ActivityScreenController extends GetxController {
-  //TODO: Implement ActivityScreenController
-
   RxList activityList = [].obs;
+  late final StorageService storageService;
+
   @override
   void onInit() {
     super.onInit();
+    storageService = Get.find<StorageService>();
+    loadActivities();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
+  void loadActivities() {
+    activityList.value = storageService.getActivities();
   }
 }

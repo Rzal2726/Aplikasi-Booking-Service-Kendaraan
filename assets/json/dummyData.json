@@ -12,10 +12,19 @@
       "id": 1,
       "brand": "Honda",
       "number": "B 1234 XYZ",
-      "model": "Beat",
-      "year": 2020,
-      "odometer": 150,
+      "model": "Vario 160",
+      "year": 2022,
+      "odometer": 14850,
       "isMain": true
+    },
+    {
+      "id": 2,
+      "brand": "Yamaha",
+      "number": "D 5678 ABC",
+      "model": "NMAX 155",
+      "year": 2023,
+      "odometer": 7500,
+      "isMain": false
     }
   ],
   "brand": [
@@ -23,45 +32,134 @@
     { "id": 2, "brand": "Yamaha" }
   ],
   "model": [
-    { "id": 1, "brandId": 1, "model": "Beat" },
-    { "id": 2, "brandId": 1, "model": "Vario" },
-    { "id": 3, "brandId": 2, "model": "Vixion" },
-    { "id": 4, "brandId": 2, "model": "R15" }
+    { "id": 1, "brandId": 1, "model": "Vario 160" },
+    { "id": 2, "brandId": 1, "model": "Beat" },
+    { "id": 3, "brandId": 1, "model": "PCX 160" },
+    { "id": 4, "brandId": 2, "model": "NMAX 155" },
+    { "id": 5, "brandId": 2, "model": "Aerox 155" },
+    { "id": 6, "brandId": 2, "model": "Vixion" }
   ],
   "services": [
     {
       "id": 1,
       "name": "Servis Berkala",
       "description": "Pembersihan total, throttle body & busi",
-      "price": 105000.0
+      "price": 105000.0,
+      "durationMinutes": 60,
+      "icon": "settings"
     },
     {
       "id": 2,
-      "name": "Ganti Oli",
+      "name": "Ganti Oli Saja",
       "description": "Servis kilat & reset indikator oil trip",
-      "price": 55000.0
+      "price": 55000.0,
+      "durationMinutes": 20,
+      "icon": "oil"
     },
     {
       "id": 3,
       "name": "Servis CVT",
       "description": "Bongkar roller, v-belt & gemuk baru",
-      "price": 65000.0
+      "price": 65000.0,
+      "durationMinutes": 45,
+      "icon": "cvt"
     },
     {
       "id": 4,
       "name": "Tune Up Injeksi",
-      "description": "Kalibraasi injector & diagnostik ECU",
-      "price": 45000.0
+      "description": "Kalibrasi injector & diagnostic ECU",
+      "price": 45000.0,
+      "durationMinutes": 30,
+      "icon": "tuneup"
     }
+  ],
+  "spareParts": [
+    {
+      "id": 1,
+      "name": "Oli Mesin AHM MPX2 0.8L",
+      "shortName": "MPX2",
+      "description": "Honda Genuine Part • SAE 10W-30",
+      "price": 54000.0,
+      "isOem": true
+    },
+    {
+      "id": 2,
+      "name": "Busi NGK U27EPR-N9",
+      "shortName": "Busi NGK",
+      "description": "Standard Pabrik Vario 160",
+      "price": 26000.0,
+      "isOem": true
+    },
+    {
+      "id": 3,
+      "name": "Kampas Rem Depan",
+      "shortName": "Kampas Rem",
+      "description": "Nissin Pad Original Vario Series",
+      "price": 45000.0,
+      "isOem": true
+    }
+  ],
+  "symptoms": [
+    "Tarikan Gas Berat",
+    "Rem Bunyi Berdecit",
+    "Starter Susah",
+    "Mesin Cepat Panas"
   ],
   "activities": [
     {
       "id": 1,
       "userId": 1,
-      "vehicleId": 1,
-      "serviceIds": [1],
+      "activities": [
+        {
+          "vehicleID": 1,
+          "serviceIds": [1, 2],
+          "status": 5
+        },
+        {
+          "vehicleID": 2,
+          "serviceIds": [1],
+          "status": 5
+        }
+      ],
       "date": "2024-06-01T10:00:00Z",
-      "status": "completed"
+      "status": "completed",
+      "totalPrice": 185000.0
+    },
+    {
+      "id": 2,
+      "userId": 1,
+      "activities": [
+        {
+          "vehicleID": 1,
+          "serviceIds": [1, 2],
+          "status": 3
+        },
+        {
+          "vehicleID": 2,
+          "serviceIds": [1],
+          "status": 4
+        }
+      ],
+      "workshopId": 1,
+      "date": "2024-06-01T10:00:00Z",
+      "status": "inprogress",
+      "totalPrice": 285000.0
+    }
+  ],
+  "workshops": [
+    {
+      "id": 1,
+      "name": "MotoServ - Bandung",
+      "address": "JL. Sukajadi, Bandung",
+      "pit": 6,
+      "rating": "4,9"
+    },
+    {
+      "id": 1,
+      "name": "MotoServ - Jakarta",
+      "address": "JL. Mawar, Jakarta",
+      "pit": 4,
+      "rating": "4,9"
     }
   ]
 }

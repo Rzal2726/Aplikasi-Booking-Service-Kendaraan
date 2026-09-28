@@ -1,109 +1,138 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:project/app/components/AppIcon.dart';
-import 'package:project/app/components/cards/badgeBasic.dart';
 import 'package:project/app/const/appcolors.dart';
 
-class BookAppbar extends StatefulWidget implements PreferredSizeWidget {
+class BookAppbar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
-  final Function()? onBack;
+  final VoidCallback? onBack;
 
   const BookAppbar({
     super.key,
     required this.title,
-    this.showBackButton = false,
+    this.showBackButton = true,
     this.onBack,
   });
 
   @override
-  State<BookAppbar> createState() => _HomeAppbarState();
-
-  @override
-  // TODO: implement preferredSize
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
 
-class _HomeAppbarState extends State<BookAppbar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      titleSpacing: showBackButton ? 0 : 16,
+      leading: showBackButton
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+              onPressed: () {
+                if (onBack != null) {
+                  onBack!();
+                } else {
+                  Get.back();
+                }
+              },
+            )
+          : null,
       title: Row(
-        spacing: 8,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          AppIcon(size: 24, iconSize: 16),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: "MotoServ",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+          const AppIcon(size: 28, iconSize: 18),
+          const SizedBox(width: 8),
+          Flexible(
+            child: RichText(
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                children: [
+                  const TextSpan(
+                    text: "MotoServ",
+                    style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: " / ",
-                  style: TextStyle(color: Colors.grey),
-                ),
-                TextSpan(
-                  text: "${widget.title}",
-                  style: TextStyle(color: Colors.black),
-                ),
-              ],
+                  const TextSpan(
+                    text: " / ",
+                    style: TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                  TextSpan(
+                    text: title,
+                    style: const TextStyle(
+                      color: Color(0xFF1E293B),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
-      centerTitle: false,
       flexibleSpace: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(20),
-              blurRadius: 8.0,
-              offset: Offset(0, 1),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4.0,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
       ),
-      leading: widget.showBackButton
-          ? InkWell(
-              child: const Icon(Icons.arrow_back),
-              onTap: () {
-                if (widget.onBack == null) {
-                  Get.back();
-                } else {
-                  widget.onBack;
-                }
-              },
-            )
-          : null,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            // Handle notification button press
-          },
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.notifications_none_rounded,
+                color: Color(0xFF475569),
+                size: 24,
+              ),
+              onPressed: () {},
+            ),
+            Positioned(
+              top: 14,
+              right: 14,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEF4444),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        GestureDetector(
-          onTap: () {
-            // Handle profile button press
-          },
-          child: const CircleAvatar(
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.person),
+        const SizedBox(width: 4),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey.shade300, width: 1.5),
+            image: const DecorationImage(
+              image: NetworkImage(
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+              ),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(width: 16),
       ],
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

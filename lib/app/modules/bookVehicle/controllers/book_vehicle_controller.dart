@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:project/app/services/snackbar.dart';
+import 'package:project/app/services/storage_service.dart';
 
 class BookVehicleController extends GetxController {
-  //TODO: Implement BookVehicleController
   TextEditingController platNumRegion = TextEditingController();
   TextEditingController platNumRegist = TextEditingController();
   TextEditingController platNumSubRegion = TextEditingController();
@@ -21,36 +18,35 @@ class BookVehicleController extends GetxController {
   RxString selectedModel = "".obs;
   RxString odometer = "".obs;
   RxMap<String, bool> loadingMap = <String, bool>{}.obs;
+
+  late final StorageService storageService;
+
   @override
   void onInit() {
     super.onInit();
+    storageService = Get.find<StorageService>();
     initVehicle();
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
   }
 
   Future<void> initVehicle() async {
     await getVehicle();
     await getBrand();
     await getModel();
+
+    // Default: If no vehicle selected yet, select the primary vehicle (or first one)
+    if (selectedVehicle.isEmpty && vehicleList.isNotEmpty) {
+      final mainVehicle = vehicleList.firstWhere(
+        (v) => v['isMain'] == true,
+        orElse: () => vehicleList.first,
+      );
+      selectedVehicle.add(mainVehicle);
+    }
   }
 
   Future<void> getVehicle() async {
     try {
       loadingMap['getVehicle'] = true;
-      final jsonFile = await rootBundle.loadString(
-        "assets/json/dummyData.json",
-      );
-      final jsonData = jsonDecode(jsonFile);
-      vehicleList.value = jsonData['vehicles'];
+      vehicleList.value = storageService.getVehicles();
     } catch (e) {
       showErrorSnackbar("Failed to fetch data");
       print("Error get vehicle: $e");
@@ -62,14 +58,10 @@ class BookVehicleController extends GetxController {
   Future<void> getModel() async {
     try {
       loadingMap['getModel'] = true;
-      final jsonFile = await rootBundle.loadString(
-        "assets/json/dummyData.json",
-      );
-      final jsonData = jsonDecode(jsonFile);
-      modelList.value = jsonData['model'];
+      modelList.value = storageService.getModels();
     } catch (e) {
       showErrorSnackbar("Failed to fetch data");
-      print("Error get vehicle: $e");
+      print("Error get model: $e");
     } finally {
       loadingMap['getModel'] = false;
     }
@@ -78,20 +70,16 @@ class BookVehicleController extends GetxController {
   Future<void> getBrand() async {
     try {
       loadingMap['getBrand'] = true;
-      final jsonFile = await rootBundle.loadString(
-        "assets/json/dummyData.json",
-      );
-      final jsonData = jsonDecode(jsonFile);
-      brandList.value = jsonData['brand'];
+      brandList.value = storageService.getBrands();
     } catch (e) {
       showErrorSnackbar("Failed to fetch data");
-      print("Error get vehicle: $e");
+      print("Error get brand: $e");
     } finally {
       loadingMap['getBrand'] = false;
     }
   }
 
-  void saveVehicle() {
+  Future<void> saveVehicle() async {
     try {
       if (selectedBrand.value.isEmpty) {
         showInfoSnackbar("Mohon isi Merk terlebih dahulu!");
@@ -120,7 +108,7 @@ class BookVehicleController extends GetxController {
         Get.back();
       }
       final data = {
-        "id": vehicleList.length + 1,
+        "id": DateTime.now().millisecondsSinceEpoch,
         "brand": selectedBrand.value,
         "number":
             "${platNumRegion.text.trim()} ${platNumRegist.text.trim()} ${platNumSubRegion.text.trim()}",
@@ -130,8 +118,14 @@ class BookVehicleController extends GetxController {
         "isMain": false,
       };
 
-      if (vehicleList.any((test) => test['id'] == data['id'])) return;
-      vehicleList.add(data);
+      if (vehicleList.any((test) => test['number'] == data['number'])) {
+        showInfoSnackbar("Motor dengan nomor plat ini sudah ada!");
+        return;
+      }
+
+      await storageService.addVehicle(data);
+      vehicleList.value = storageService.getVehicles();
+      selectedVehicle.add(data); // Auto select newly added vehicle
       showSuccessSnackbar("Berhasil menambahkan motor ke garasi!");
     } catch (e) {
       showErrorSnackbar(
@@ -150,13 +144,13 @@ class BookVehicleController extends GetxController {
 
   void selectVehicle(Map data) {
     if (isSelected(data)) {
-      selectedVehicle.remove(data);
+      selectedVehicle.removeWhere((item) => item['id'] == data['id']);
     } else {
       selectedVehicle.add(data);
     }
   }
 
   bool isSelected(Map data) {
-    return selectedVehicle.any((test) => test == data);
+    return selectedVehicle.any((test) => test['id'] == data['id']);
   }
 }

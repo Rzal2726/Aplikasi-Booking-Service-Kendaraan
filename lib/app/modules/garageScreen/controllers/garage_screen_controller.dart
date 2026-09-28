@@ -1,13 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:project/app/services/snackbar.dart';
+import 'package:project/app/services/storage_service.dart';
 
 class GarageScreenController extends GetxController {
-  //TODO: Implement GarageScreenController
-
   final count = 0.obs;
   TextEditingController platNumRegion = TextEditingController();
   TextEditingController platNumRegist = TextEditingController();
@@ -22,20 +18,14 @@ class GarageScreenController extends GetxController {
   RxString selectedModel = "".obs;
   RxString odometer = "".obs;
   RxMap<String, bool> loadingMap = <String, bool>{}.obs;
+
+  late final StorageService storageService;
+
   @override
   void onInit() {
     super.onInit();
+    storageService = Get.find<StorageService>();
     initGarage();
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
   }
 
   Future<void> initGarage() async {
@@ -47,11 +37,7 @@ class GarageScreenController extends GetxController {
   Future<void> getVehicle() async {
     try {
       loadingMap['getVehicle'] = true;
-      final jsonFile = await rootBundle.loadString(
-        "assets/json/dummyData.json",
-      );
-      final jsonData = jsonDecode(jsonFile);
-      vehicleList.value = jsonData['vehicles'];
+      vehicleList.value = storageService.getVehicles();
     } catch (e) {
       showErrorSnackbar("Failed to fetch data");
       print("Error get vehicle: $e");
@@ -60,17 +46,17 @@ class GarageScreenController extends GetxController {
     }
   }
 
+  Map getVehicleById(int id) {
+    return vehicleList.firstWhereOrNull((data) => data['id'] == id) ?? {};
+  }
+
   Future<void> getModel() async {
     try {
       loadingMap['getModel'] = true;
-      final jsonFile = await rootBundle.loadString(
-        "assets/json/dummyData.json",
-      );
-      final jsonData = jsonDecode(jsonFile);
-      modelList.value = jsonData['model'];
+      modelList.value = storageService.getModels();
     } catch (e) {
       showErrorSnackbar("Failed to fetch data");
-      print("Error get vehicle: $e");
+      print("Error get model: $e");
     } finally {
       loadingMap['getModel'] = false;
     }
@@ -79,20 +65,16 @@ class GarageScreenController extends GetxController {
   Future<void> getBrand() async {
     try {
       loadingMap['getBrand'] = true;
-      final jsonFile = await rootBundle.loadString(
-        "assets/json/dummyData.json",
-      );
-      final jsonData = jsonDecode(jsonFile);
-      brandList.value = jsonData['brand'];
+      brandList.value = storageService.getBrands();
     } catch (e) {
       showErrorSnackbar("Failed to fetch data");
-      print("Error get vehicle: $e");
+      print("Error get brand: $e");
     } finally {
       loadingMap['getBrand'] = false;
     }
   }
 
-  void saveVehicle() {
+  Future<void> saveVehicle() async {
     try {
       if (selectedBrand.value.isEmpty) {
         showInfoSnackbar("Mohon isi Merk terlebih dahulu!");
@@ -121,7 +103,7 @@ class GarageScreenController extends GetxController {
         Get.back();
       }
       final data = {
-        "id": vehicleList.length + 1,
+        "id": DateTime.now().millisecondsSinceEpoch,
         "brand": selectedBrand.value,
         "number":
             "${platNumRegion.text.trim()} ${platNumRegist.text.trim()} ${platNumSubRegion.text.trim()}",
@@ -131,8 +113,13 @@ class GarageScreenController extends GetxController {
         "isMain": false,
       };
 
-      if (vehicleList.any((test) => test['id'] == data['id'])) return;
-      vehicleList.add(data);
+      if (vehicleList.any((test) => test['number'] == data['number'])) {
+        showInfoSnackbar("Motor dengan nomor plat ini sudah ada!");
+        return;
+      }
+
+      await storageService.addVehicle(data);
+      vehicleList.value = storageService.getVehicles();
       showSuccessSnackbar("Berhasil menambahkan motor ke garasi!");
     } catch (e) {
       showErrorSnackbar(
