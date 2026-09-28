@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:printing/printing.dart';
+import 'package:project/app/services/pdf_invoice_service.dart';
 import 'package:project/app/services/storage_service.dart';
 
 class LiveTrackingController extends GetxController {
@@ -13,6 +15,9 @@ class LiveTrackingController extends GetxController {
 
   // Set of pit indices whose timeline details are expanded
   final expandedPits = <int>{}.obs;
+
+  // PDF generation state
+  final isGeneratingPdf = false.obs;
 
   @override
   void onInit() {
@@ -258,5 +263,46 @@ class LiveTrackingController extends GetxController {
       }
     }
     return labels.isNotEmpty ? labels.join(' + ') : '—';
+  }
+
+  Future<void> generateAndDownloadInvoice({bool preview = true}) async {
+    if (activity.value == null) {
+      Get.snackbar(
+        'Perhatian',
+        'Data pesanan tidak ditemukan.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    try {
+      isGeneratingPdf.value = true;
+      final pdfBytes = await PdfInvoiceService.generateInvoicePdf(
+        activity: activity.value!,
+        storageService: storageService,
+      );
+
+      final filename = 'Invoice_$bookingCode.pdf';
+
+      if (preview) {
+        await Printing.layoutPdf(
+          onLayout: (format) async => pdfBytes,
+          name: filename,
+        );
+      } else {
+        await Printing.sharePdf(
+          bytes: pdfBytes,
+          filename: filename,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal Membuka Invoice',
+        'Terjadi kendala saat menghasilkan PDF: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isGeneratingPdf.value = false;
+    }
   }
 }

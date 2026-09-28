@@ -7,11 +7,17 @@ import 'package:project/app/const/appcolors.dart';
 class HomeAppbar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
+  final String? location;
+  final bool isLoadingLocation;
+  final VoidCallback? onLocationTap;
 
   const HomeAppbar({
     super.key,
     required this.title,
     this.showBackButton = false,
+    this.location,
+    this.isLoadingLocation = false,
+    this.onLocationTap,
   });
 
   @override
@@ -36,22 +42,40 @@ class _HomeAppbarState extends State<HomeAppbar> {
             "MotoServ",
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
-          BasicBadge(
-            content: Row(
-              spacing: 4,
-              children: [
-                Icon(Icons.location_pin, size: 16, color: Colors.grey.shade700),
-                Text(
-                  'Bandung',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
+          GestureDetector(
+            onTap: widget.onLocationTap,
+            child: BasicBadge(
+              content: Row(
+                spacing: 4,
+                children: [
+                  widget.isLoadingLocation
+                      ? SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            color: Colors.grey.shade700,
+                          ),
+                        )
+                      : Icon(
+                          Icons.location_pin,
+                          size: 16,
+                          color: Colors.grey.shade700,
+                        ),
+                  Text(
+                    widget.location?.isNotEmpty == true
+                        ? widget.location!
+                        : 'Indonesia',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade700,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              backgroundColor: AppColors.backgroundSwatch.shade200,
             ),
-            backgroundColor: AppColors.backgroundSwatch.shade200,
           ),
         ],
       ),

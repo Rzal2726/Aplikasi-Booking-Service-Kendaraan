@@ -57,6 +57,13 @@ class LiveTrackingView extends GetView<LiveTrackingController> {
         ],
       ),
       centerTitle: false,
+      actions: [
+        IconButton(
+          tooltip: 'Lihat / Cetak Invoice PDF',
+          icon: const Icon(Icons.picture_as_pdf_outlined, color: Color(0xFF0F172A)),
+          onPressed: () => controller.generateAndDownloadInvoice(),
+        ),
+      ],
     );
   }
 
@@ -1082,26 +1089,42 @@ class LiveTrackingView extends GetView<LiveTrackingController> {
             ],
           ),
           const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.download_outlined, size: 16),
-              label: const Text(
-                'Download Invoice Sementara (PDF)',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: AppColors.primaryColor.shade100,
-                foregroundColor: AppColors.primaryColor.shade800,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Obx(() {
+            final isGenerating = controller.isGeneratingPdf.value;
+            return SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: isGenerating
+                    ? null
+                    : () => controller.generateAndDownloadInvoice(),
+                icon: isGenerating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryColor,
+                        ),
+                      )
+                    : const Icon(Icons.download_outlined, size: 16),
+                label: Text(
+                  isGenerating
+                      ? 'Menyiapkan PDF...'
+                      : 'Download Invoice Sementara (PDF)',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: AppColors.primaryColor.shade100,
+                  foregroundColor: AppColors.primaryColor.shade800,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );

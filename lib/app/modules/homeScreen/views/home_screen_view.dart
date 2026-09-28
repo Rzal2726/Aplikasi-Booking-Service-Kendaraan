@@ -106,7 +106,14 @@ class HomeScreenView extends GetView<HomeScreenController> {
         backgroundColor: AppColors.backgroundSwatch,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight),
-          child: Obx(() => HomeAppbar(title: controller.appBarTitle.value)),
+          child: Obx(
+            () => HomeAppbar(
+              title: controller.appBarTitle.value,
+              location: controller.currentLocation.value,
+              isLoadingLocation: controller.isLoadingLocation.value,
+              onLocationTap: controller.fetchCurrentLocation,
+            ),
+          ),
         ),
         bottomNavigationBar: navBar(),
         body: Obx(() {
