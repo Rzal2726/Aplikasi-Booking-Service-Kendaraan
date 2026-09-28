@@ -43,14 +43,6 @@ A Flutter mobile application for booking motorcycle service appointments, featur
 | [`get`](https://pub.dev/packages/get)                               | `^4.7.3`  | State management, routing, dependency injection (GetX)   |
 | [`shared_preferences`](https://pub.dev/packages/shared_preferences) | `^2.5.5`  | Local persistent storage (JSON data, bookings, vehicles) |
 | [`intl`](https://pub.dev/packages/intl)                             | `^0.20.3` | Date/time formatting and currency (Rupiah) formatting    |
-| [`cupertino_icons`](https://pub.dev/packages/cupertino_icons)       | `^1.0.8`  | iOS-style icon set                                       |
-
-### Dev
-
-| Package                                                   | Version  | Purpose                 |
-| --------------------------------------------------------- | -------- | ----------------------- |
-| [`flutter_lints`](https://pub.dev/packages/flutter_lints) | `^6.0.0` | Recommended lint rules  |
-| `flutter_test`                                            | bundled  | Unit and widget testing |
 
 ---
 
