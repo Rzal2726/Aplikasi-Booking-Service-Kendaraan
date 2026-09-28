@@ -6,17 +6,6 @@ A Flutter mobile application for booking motorcycle service appointments, featur
 
 ---
 
-## 📋 Table of Contents
-
-- [Features](#features)
-- [SDK & Environment Requirements](#sdk--environment-requirements)
-- [Dependencies](#dependencies)
-- [Project Structure](#project-structure)
-- [Running Locally](#running-locally)
-- [Assets & Data](#assets--data)
-
----
-
 ## ✨ Features
 
 - **Home Screen** — Active booking overview and quick access to services
