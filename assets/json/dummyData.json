@@ -59,7 +59,7 @@
       "id": 1,
       "userId": 1,
       "vehicleId": 1,
-      "serviceId": 1,
+      "serviceIds": [1],
       "date": "2024-06-01T10:00:00Z",
       "status": "completed"
     }

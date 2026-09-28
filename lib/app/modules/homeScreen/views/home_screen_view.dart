@@ -12,6 +12,7 @@ import 'package:project/app/modules/accountScreen/views/account_screen_view.dart
 import 'package:project/app/modules/activityScreen/views/activity_screen_view.dart';
 import 'package:project/app/modules/garageScreen/views/garage_screen_view.dart';
 import 'package:project/app/modules/serviceScreen/views/service_screen_view.dart';
+import 'package:project/app/routes/app_pages.dart';
 
 import '../controllers/home_screen_controller.dart';
 
@@ -188,8 +189,8 @@ class HomeScreenView extends GetView<HomeScreenController> {
             const SizedBox(height: 16),
             bookCard(),
             const SizedBox(height: 16),
-            shortcutList(),
-            const SizedBox(height: 16),
+            // shortcutList(),
+            // const SizedBox(height: 16),
             serviceSummary(),
             const SizedBox(height: 16),
 
@@ -413,7 +414,9 @@ class HomeScreenView extends GetView<HomeScreenController> {
                 SizedBox(
                   width: double.infinity,
                   child: ButtonPrimary(
-                    onPressed: () {},
+                    onPressed: () {
+                      Get.toNamed(Routes.BOOK_SCREEN);
+                    },
                     text: 'Mulai Booking Servis',
                     color: Colors.white,
                     textColor: AppColors.primaryColor.shade800,
@@ -440,6 +443,9 @@ class HomeScreenView extends GetView<HomeScreenController> {
             child: shortcutButton(
               text: "Servis\nBerkala",
               icon: Icons.settings,
+              onTap: () {
+                Get.toNamed(Routes.BOOK_SCREEN);
+              },
             ),
           ),
           const SizedBox(width: 8.0),
@@ -447,19 +453,31 @@ class HomeScreenView extends GetView<HomeScreenController> {
             child: shortcutButton(
               text: "Ganti\nOli Kilat",
               icon: Icons.oil_barrel,
+              onTap: () {
+                Get.toNamed(Routes.BOOK_SCREEN);
+              },
             ),
-          ),
-          const SizedBox(width: 8.0),
-          Expanded(
-            child: shortcutButton(text: "Servis CVT", icon: Icons.tune),
           ),
           const SizedBox(width: 8.0),
           Expanded(
             child: shortcutButton(
-              text: "Darurat\n/Mogok",
-              icon: Icons.car_repair,
+              text: "Servis CVT",
+              icon: Icons.tune,
+              onTap: () {
+                Get.toNamed(Routes.BOOK_SCREEN);
+              },
             ),
           ),
+          // const SizedBox(width: 8.0),
+          // Expanded(
+          //   child: shortcutButton(
+          //     text: "Darurat\n/Mogok",
+          //     icon: Icons.car_repair,
+          //     onTap: () {
+          //       Get.toNamed(Routes.BOOK_SCREEN);
+          //     },
+          //   ),
+          // ),
         ],
       ),
     );
@@ -469,35 +487,41 @@ class HomeScreenView extends GetView<HomeScreenController> {
     required String text,
     required IconData icon,
     Color? textColor,
+    required Function() onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundSwatch.shade200,
-              borderRadius: BorderRadius.circular(8.0),
+    return GestureDetector(
+      onTap: () {
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundSwatch.shade200,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Icon(icon, color: AppColors.primaryColor.shade800),
             ),
-            child: Icon(icon, color: AppColors.primaryColor.shade800),
-          ),
-          const SizedBox(height: 8.0),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.normal,
-              color: textColor ?? Colors.black,
+            const SizedBox(height: 8.0),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+                color: textColor ?? Colors.black,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -545,7 +569,9 @@ class HomeScreenView extends GetView<HomeScreenController> {
               return EmptyCard(
                 message: "Tidak ada servis yang sedang berlangsung",
                 actionButton: ButtonPrimary(
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.toNamed(Routes.BOOK_SCREEN);
+                  },
                   text: "Mulai Booking Servis",
                   icon: Icon(Icons.arrow_forward, color: Colors.white),
                 ),
@@ -645,7 +671,9 @@ class HomeScreenView extends GetView<HomeScreenController> {
               return EmptyCard(
                 message: "Belum ada aktivitas",
                 actionButton: ButtonPrimary(
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.toNamed(Routes.BOOK_SCREEN);
+                  },
                   text: "Mulai Booking Servis",
                   icon: Icon(Icons.arrow_forward, color: Colors.white),
                 ),
