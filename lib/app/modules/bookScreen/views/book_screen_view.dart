@@ -82,122 +82,125 @@ class BookScreenView extends GetView<BookScreenController> {
     final pageIndex = controller.pageIndex.value;
 
     if (pageIndex == 1) {
-      // Step 2 (Layanan) Bottom Bar matching the screenshot
-      return Obx(() {
-        final motorCount = controller.serviceController.selectedVehicle.length;
-        final totalPrice = controller.serviceController.totalPrice;
-        final totalMinutes =
-            controller.serviceController.totalEstimatedMinutes;
+      // Step 2 (Layanan) Bottom Bar
+      final motorCount = controller.serviceController.selectedVehicle.length;
+      final totalPrice = controller.serviceController.totalPrice;
+      final totalMinutes = controller.serviceController.totalEstimatedMinutes;
+      final subtitle = motorCount >= 2
+          ? "Pengerjaan Paralel ($motorCount Pit) • ~$totalMinutes Menit"
+          : "Estimasi Pengerjaan • ~$totalMinutes Menit";
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 10,
-                offset: const Offset(0, -3),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                // Total Information
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Total Estimasi ($motorCount Motor):",
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF64748B),
-                        ),
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              // Total Information
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      motorCount > 1
+                          ? "Total Estimasi ($motorCount Motor):"
+                          : "Total Estimasi (1 Motor):",
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        formatRupiah(totalPrice),
-                        style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      formatRupiah(totalPrice),
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
                       ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF10B981),
-                              shape: BoxShape.circle,
-                            ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(width: 5),
-                          Flexible(
-                            child: Text(
-                              "Pengerjaan Paralel ($motorCount Pit) • ~$totalMinutes Menit",
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF059669),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // "Lanjut ke Jadwal ->" Button
-                Material(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => controller.nextPage(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "Lanjut ke Jadwal",
-                            style: TextStyle(
-                              color: Colors.white,
+                        ),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            subtitle,
+                            style: const TextStyle(
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              color: Color(0xFF059669),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(width: 6),
-                          Icon(
-                            Icons.arrow_forward_rounded,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // "Lanjut ke Jadwal ->" Button
+              Material(
+                color: AppColors.primaryColor,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => controller.nextPage(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Lanjut ke Jadwal",
+                          style: TextStyle(
                             color: Colors.white,
-                            size: 18,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
-                        ],
-                      ),
+                        ),
+                        SizedBox(width: 6),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      });
+        ),
+      );
     }
 
     if (pageIndex == 0) {
+      final selectedCount = controller.vehicleController.selectedVehicle.length;
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
@@ -214,14 +217,12 @@ class BookScreenView extends GetView<BookScreenController> {
           child: Row(
             children: [
               Expanded(
-                child: Obx(
-                  () => Text(
-                    "${controller.vehicleController.selectedVehicle.length} Motor Dipilih",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF0F172A),
-                    ),
+                child: Text(
+                  "$selectedCount Motor Dipilih",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF0F172A),
                   ),
                 ),
               ),

@@ -35,25 +35,18 @@ class MainAppbar extends StatelessWidget implements PreferredSizeWidget {
               onPressed: () => Get.back(),
             )
           : null,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            // Handle notification button press
-          },
-        ),
-        const SizedBox(width: 12),
-        GestureDetector(
-          onTap: () {
-            // Handle profile button press
-          },
-          child: const CircleAvatar(
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.person),
-          ),
-        ),
-        const SizedBox(width: 16),
-      ],
+      // actions: [
+      //   GestureDetector(
+      //     onTap: () {
+      //       // Handle profile button press
+      //     },
+      //     child: const CircleAvatar(
+      //       backgroundColor: Colors.grey,
+      //       child: Icon(Icons.person),
+      //     ),
+      //   ),
+      //   const SizedBox(width: 16),
+      // ],
     );
   }
 

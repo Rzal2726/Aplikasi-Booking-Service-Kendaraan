@@ -105,47 +105,7 @@
     "Starter Susah",
     "Mesin Cepat Panas"
   ],
-  "activities": [
-    {
-      "id": 1,
-      "userId": 1,
-      "activities": [
-        {
-          "vehicleID": 1,
-          "serviceIds": [1, 2],
-          "status": 5
-        },
-        {
-          "vehicleID": 2,
-          "serviceIds": [1],
-          "status": 5
-        }
-      ],
-      "date": "2024-06-01T10:00:00Z",
-      "status": "completed",
-      "totalPrice": 185000.0
-    },
-    {
-      "id": 2,
-      "userId": 1,
-      "activities": [
-        {
-          "vehicleID": 1,
-          "serviceIds": [1, 2],
-          "status": 3
-        },
-        {
-          "vehicleID": 2,
-          "serviceIds": [1],
-          "status": 4
-        }
-      ],
-      "workshopId": 1,
-      "date": "2024-06-01T10:00:00Z",
-      "status": "inprogress",
-      "totalPrice": 285000.0
-    }
-  ],
+  "activities": [],
   "workshops": [
     {
       "id": 1,
@@ -155,11 +115,38 @@
       "rating": "4,9"
     },
     {
-      "id": 1,
+      "id": 2,
       "name": "MotoServ - Jakarta",
       "address": "JL. Mawar, Jakarta",
       "pit": 4,
       "rating": "4,9"
+    }
+  ],
+  "status": [
+    {
+      "id": 1,
+      "status": "Diterima di Bengkel",
+      "description": "Penyerahan kunci & pendaftaran antrean"
+    },
+    {
+      "id": 2,
+      "status": "Pemeriksaan Awal",
+      "description": "Checklist kondisi"
+    },
+    {
+      "id": 3,
+      "status": "Pengerjaan Servis",
+      "description": ""
+    },
+    {
+      "id": 4,
+      "status": "Final QC",
+      "description": "Tes putaran mesin & respon pengereman"
+    },
+    {
+      "id": 5,
+      "status": "Motor siap diambil",
+      "description": "Menunggu penyelesaian di area penyerahan"
     }
   ]
 }

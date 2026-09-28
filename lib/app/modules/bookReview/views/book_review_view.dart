@@ -19,36 +19,50 @@ class BookReviewView extends GetView<BookReviewController> {
     return Obx(() {
       final vehicles = serviceController.selectedVehicle;
       final motorCount = vehicles.length;
+      final isParallel = scheduleController.workMethod.value == 'parallel' && motorCount >= 2;
 
       return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // 1. Top Banner: Konfirmasi Pesanan
-          _buildTopBanner(motorCount),
+          _buildTopBanner(motorCount, isParallel),
           const SizedBox(height: 16),
 
           // 2. Workshop & Schedule Summary Card
-          _buildWorkshopScheduleCard(scheduleController, bookScreenController),
+          _buildWorkshopScheduleCard(
+              scheduleController, bookScreenController, isParallel, motorCount),
           const SizedBox(height: 16),
 
-          // 3. Simultan Dark Banner
-          _buildSimultanBanner(),
+          // 3. Simultan Dark Banner (Only for 2 or more motors)
+          if (motorCount >= 2) ...[
+            _buildSimultanBanner(scheduleController, isParallel),
+            const SizedBox(height: 16),
+          ],
+
+          // 4. Dynamic Motor Cards
+          ...List.generate(vehicles.length, (index) {
+            final vehicle = vehicles[index];
+            return Column(
+              children: [
+                _buildMotorCard(
+                  index: index,
+                  vehicle: vehicle,
+                  serviceController: serviceController,
+                  bookScreenController: bookScreenController,
+                ),
+                if (index < vehicles.length - 1) const SizedBox(height: 16),
+              ],
+            );
+          }),
+
           const SizedBox(height: 16),
 
-          // 4. Motor 1 Card (Honda Vario 160 CBS)
-          _buildMotor1Card(bookScreenController),
+          // 5. Informasi Pemesan & Kedatangan
+          _buildCustomerInfoCard(scheduleController),
           const SizedBox(height: 16),
 
-          // 5. Motor 2 Card (Yamaha NMAX 155 Connected)
-          _buildMotor2Card(bookScreenController),
-          const SizedBox(height: 16),
-
-          // 6. Informasi Pemesan & Kedatangan
-          _buildCustomerInfoCard(),
-          const SizedBox(height: 16),
-
-          // 7. Rincian Pembayaran
-          _buildPaymentSummaryCard(),
+          // 6. Rincian Pembayaran
+          _buildPaymentSummaryCard(serviceController, scheduleController),
           const SizedBox(height: 24),
         ],
       );
@@ -56,7 +70,7 @@ class BookReviewView extends GetView<BookReviewController> {
   }
 
   // --- 1. Top Banner ---
-  Widget _buildTopBanner(int motorCount) {
+  Widget _buildTopBanner(int motorCount, bool isParallel) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -105,7 +119,9 @@ class BookReviewView extends GetView<BookReviewController> {
                   ),
                 ),
                 Text(
-                  "Pemeriksaan $motorCount motor",
+                  motorCount > 1
+                      ? "Pemeriksaan $motorCount motor"
+                      : "Pemeriksaan 1 motor",
                   style: const TextStyle(
                     fontSize: 11,
                     color: Color(0xFF64748B),
@@ -114,28 +130,29 @@ class BookReviewView extends GetView<BookReviewController> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bolt, size: 13, color: Color(0xFF16A34A)),
-                SizedBox(width: 3),
-                Text(
-                  "2 Pit Siap Simultan",
-                  style: TextStyle(
-                    color: Color(0xFF16A34A),
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
+          if (isParallel)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.bolt, size: 13, color: Color(0xFF16A34A)),
+                  const SizedBox(width: 3),
+                  Text(
+                    "$motorCount Pit Siap Simultan",
+                    style: const TextStyle(
+                      color: Color(0xFF16A34A),
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -145,7 +162,15 @@ class BookReviewView extends GetView<BookReviewController> {
   Widget _buildWorkshopScheduleCard(
     BookScheduleController scheduleController,
     BookScreenController bookScreenController,
+    bool isParallel,
+    int motorCount,
   ) {
+    final selectedDate =
+        scheduleController.availableDates[scheduleController.selectedDateIndex.value];
+    final dateStr =
+        "${selectedDate['day']}, ${selectedDate['date']} ${scheduleController.selectedMonthYear.value}";
+    final timeStr = "${scheduleController.selectedTimeSlot.value} WIB";
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -240,17 +265,17 @@ class BookReviewView extends GetView<BookReviewController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.calendar_today_outlined,
                       size: 14,
                       color: AppColors.primaryColor,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
-                      "Sabtu, 24 Feb 2024 • 09:30 WIB",
-                      style: TextStyle(
+                      "$dateStr \u2022 $timeStr",
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),
@@ -258,41 +283,42 @@ class BookReviewView extends GetView<BookReviewController> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline,
-                            size: 12,
-                            color: Color(0xFF16A34A),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            "Pengerjaan Paralel (2 Pit Sekaligus)",
-                            style: TextStyle(
+                if (isParallel) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              size: 12,
                               color: Color(0xFF16A34A),
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              "Pengerjaan Paralel ($motorCount Pit Sekaligus)",
+                              style: const TextStyle(
+                                color: Color(0xFF16A34A),
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -302,7 +328,12 @@ class BookReviewView extends GetView<BookReviewController> {
   }
 
   // --- 3. Simultan Dark Banner ---
-  Widget _buildSimultanBanner() {
+  Widget _buildSimultanBanner(
+      BookScheduleController scheduleController, bool isParallel) {
+    final assignments = scheduleController.pitAssignments;
+    final pitLabels = assignments.map((a) => a['pit'] ?? '').toList();
+    final pitText = pitLabels.isNotEmpty ? pitLabels.join(' & ') : '\u2014';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -324,22 +355,24 @@ class BookReviewView extends GetView<BookReviewController> {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Simultan: Pit 03 & Pit 04",
-                  style: TextStyle(
+                  isParallel
+                      ? "Simultan: $pitText"
+                      : "Berurutan: $pitText",
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  "09:30 - 10:30 WIB (~60 mnt selesai)",
-                  style: TextStyle(
+                  scheduleController.estimatedEndTimeText,
+                  style: const TextStyle(
                     fontSize: 11,
                     color: Color(0xFF94A3B8),
                   ),
@@ -374,350 +407,207 @@ class BookReviewView extends GetView<BookReviewController> {
     );
   }
 
-  // --- 4. Motor 1 Card (Honda Vario 160 CBS) ---
-  Widget _buildMotor1Card(BookScreenController bookScreenController) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Motor 1
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: const Text(
-                  "Motor 1",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Honda Vario 160 CBS",
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    Text(
-                      "B 1234 XYZ",
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  bookScreenController.pageIndex.value = 1; // Back to Service
-                },
-                child: const Row(
-                  children: [
-                    Icon(
-                      Icons.edit_outlined,
-                      size: 13,
-                      color: AppColors.primaryColor,
-                    ),
-                    SizedBox(width: 3),
-                    Text(
-                      "Ubah",
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Mechanic sub-bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.engineering_outlined,
-                  size: 15,
-                  color: AppColors.primaryColor,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  "Pit 03 • Mekanik: Bpk. Dadang",
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF334155),
-                  ),
-                ),
-                Spacer(),
-                Row(
-                  children: [
-                    Icon(Icons.circle, size: 6, color: Color(0xFF16A34A)),
-                    SizedBox(width: 3),
-                    Text(
-                      "Standby",
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF16A34A),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Service Items
-          _buildReviewItem(
-            title: "Servis Berkala Lengkap",
-            subtitle: "Pembersihan throttle body & CVT (~45 mnt)",
-            price: 105000,
-          ),
-          const SizedBox(height: 10),
-          _buildReviewItem(
-            title: "Oli Mesin AHM MPX2 0.8L",
-            subtitle: "Suku Cadang Asli OEM Honda",
-            price: 54000,
-          ),
-          const SizedBox(height: 10),
-          _buildReviewItem(
-            title: "Busi Honda CPR9EA-9",
-            subtitle: "Penggantian Busi Standar Pabrikan",
-            price: 26000,
-          ),
-          const SizedBox(height: 12),
-          // Notes Box
-          _buildOwnerNote(
-            "Tarikan gas berat, getaran CVT rpm rendah saat akselerasi.",
-          ),
-          const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 10),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Subtotal Motor 1 (~60 Menit)",
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-              ),
-              Text(
-                "Rp 185.000",
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // --- 4. Dynamic Motor Card ---
+  Widget _buildMotorCard({
+    required int index,
+    required dynamic vehicle,
+    required BookServiceController serviceController,
+    required BookScreenController bookScreenController,
+  }) {
+    final vehicleId = vehicle['id'];
+    final motorLabel = "Motor ${index + 1}";
+    final vehicleName = "${vehicle['brand']} ${vehicle['model']}";
+    final plateNumber = vehicle['number'] ?? "\u2014";
+    final state = serviceController.getSelectionState(vehicleId);
 
-  // --- 5. Motor 2 Card (Yamaha NMAX 155 Connected) ---
-  Widget _buildMotor2Card(BookScreenController bookScreenController) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Motor 2
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: const Text(
-                  "Motor 2",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
+    return Obx(() {
+      final selectedService = serviceController.getSelectedServiceData(vehicleId);
+      final selectedParts = serviceController.getSelectedSparePartsData(vehicleId);
+      final notes = state.notesController.text;
+      final subtotal = serviceController.getVehicleSubtotal(vehicleId);
+      final durationMinutes = serviceController.getVehicleEstimatedMinutes(vehicleId);
+
+      // Find pit assignment for this vehicle
+      final pitAssignments = Get.find<BookScheduleController>().pitAssignments;
+      final pitInfo = pitAssignments.length > index ? pitAssignments[index] : null;
+      final pitLabel = pitInfo?['pit'] ?? "\u2014";
+      final mechanic = pitInfo?['mechanic'] ?? "\u2014";
+
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Motor N
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    motorLabel,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Yamaha NMAX 155 Connected",
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        vehicleName,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
                       ),
-                    ),
-                    Text(
-                      "D 5678 ABC",
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF64748B),
+                      Text(
+                        plateNumber,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              InkWell(
-                onTap: () {
-                  bookScreenController.pageIndex.value = 1; // Back to Service
-                },
-                child: const Row(
-                  children: [
-                    Icon(
-                      Icons.edit_outlined,
-                      size: 13,
-                      color: AppColors.primaryColor,
-                    ),
-                    SizedBox(width: 3),
-                    Text(
-                      "Ubah",
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
+                InkWell(
+                  onTap: () {
+                    bookScreenController.pageIndex.value = 1; // Back to Service
+                  },
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.edit_outlined,
+                        size: 13,
                         color: AppColors.primaryColor,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Mechanic sub-bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.engineering_outlined,
-                  size: 15,
-                  color: AppColors.primaryColor,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  "Pit 04 • Mekanik: Bpk. Ilham",
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF334155),
-                  ),
-                ),
-                Spacer(),
-                Row(
-                  children: [
-                    Icon(Icons.circle, size: 6, color: Color(0xFF16A34A)),
-                    SizedBox(width: 3),
-                    Text(
-                      "Standby",
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF16A34A),
+                      SizedBox(width: 3),
+                      Text(
+                        "Ubah",
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryColor,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          // Service Items
-          _buildReviewItem(
-            title: "Ganti Oli Mesin & Gardan Yamalube",
-            subtitle: "Paket Super Matic 1.0L + Gardan Oil (~15 mnt)",
-            price: 85000,
-          ),
-          const SizedBox(height: 10),
-          _buildReviewItem(
-            title: "Kampas Rem Belakang (Brake Pad)",
-            subtitle: "OEM Yamaha Genuine Parts (~30 mnt)",
-            price: 95000,
-          ),
-          const SizedBox(height: 12),
-          // Notes Box
-          _buildOwnerNote(
-            "Rem belakang bunyi berdecit keras saat kondisi macet stop-and-go.",
-          ),
-          const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 10),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Subtotal Motor 2 (~60 Menit)",
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+            const SizedBox(height: 12),
+            // Mechanic sub-bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
               ),
-              Text(
-                "Rp 180.000",
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.engineering_outlined,
+                    size: 15,
+                    color: AppColors.primaryColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    "$pitLabel \u2022 Mekanik: $mechanic",
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF334155),
+                    ),
+                  ),
+                  const Spacer(),
+                  const Row(
+                    children: [
+                      Icon(Icons.circle, size: 6, color: Color(0xFF16A34A)),
+                      SizedBox(width: 3),
+                      Text(
+                        "Standby",
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF16A34A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: 12),
+            // Selected Service
+            if (selectedService != null) ...[
+              _buildReviewItem(
+                title: selectedService['name'] ?? "\u2014",
+                subtitle: selectedService['description'] ?? "",
+                price: (selectedService['price'] as num).toDouble(),
+              ),
+              const SizedBox(height: 10),
             ],
-          ),
-        ],
-      ),
-    );
+            // Selected Spare Parts
+            ...selectedParts.map((part) => Column(
+                  children: [
+                    _buildReviewItem(
+                      title: part['name'] ?? "\u2014",
+                      subtitle: part['description'] ?? "",
+                      price: (part['price'] as num).toDouble(),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                )),
+            // Owner Notes (if any)
+            if (notes.isNotEmpty) ...[
+              _buildOwnerNote(notes),
+              const SizedBox(height: 12),
+            ],
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Subtotal $motorLabel (~$durationMinutes Menit)",
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                Text(
+                  formatRupiah(subtotal),
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildReviewItem({
@@ -809,8 +699,8 @@ class BookReviewView extends GetView<BookReviewController> {
     );
   }
 
-  // --- 6. Informasi Pemesan & Kedatangan ---
-  Widget _buildCustomerInfoCard() {
+  // --- 5. Informasi Pemesan & Kedatangan ---
+  Widget _buildCustomerInfoCard(BookScheduleController scheduleController) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -828,15 +718,15 @@ class BookReviewView extends GetView<BookReviewController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.assignment_ind_outlined,
                 size: 18,
                 color: Color(0xFF475569),
               ),
-              SizedBox(width: 8),
-              Text(
+              const SizedBox(width: 8),
+              const Text(
                 "Informasi Pemesan & Kedatangan",
                 style: TextStyle(
                   fontSize: 13.5,
@@ -844,7 +734,7 @@ class BookReviewView extends GetView<BookReviewController> {
                   color: Color(0xFF0F172A),
                 ),
               ),
-              Spacer(),
+              const Spacer(),
               Text(
                 "Ubah",
                 style: TextStyle(
@@ -971,8 +861,17 @@ class BookReviewView extends GetView<BookReviewController> {
     );
   }
 
-  // --- 7. Rincian Pembayaran ---
-  Widget _buildPaymentSummaryCard() {
+  // --- 6. Rincian Pembayaran ---
+  Widget _buildPaymentSummaryCard(
+    BookServiceController serviceController,
+    BookScheduleController scheduleController,
+  ) {
+    final subtotal = serviceController.totalPrice;
+    final motorCount = serviceController.selectedVehicle.length;
+    final discount = controller.discountAmount;
+    final total = controller.totalPayment;
+    final estimatedMinutes = serviceController.totalEstimatedMinutes;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1009,16 +908,17 @@ class BookReviewView extends GetView<BookReviewController> {
             ],
           ),
           const SizedBox(height: 12),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Total Biaya Servis & Part (2 Motor)",
-                style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+                "Total Biaya Servis & Part ($motorCount Motor)",
+                style: const TextStyle(
+                    fontSize: 12.5, color: Color(0xFF475569)),
               ),
               Text(
-                "Rp 365.000",
-                style: TextStyle(
+                formatRupiah(subtotal),
+                style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),
@@ -1026,24 +926,26 @@ class BookReviewView extends GetView<BookReviewController> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Diskon Multi-Motor (Paket 2 Pit)",
-                style: TextStyle(fontSize: 12.5, color: Color(0xFF16A34A)),
-              ),
-              Text(
-                "-Rp 35.000",
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF16A34A),
+          if (discount > 0) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Diskon Multi-Motor (Paket 2 Pit)",
+                  style: TextStyle(fontSize: 12.5, color: Color(0xFF16A34A)),
                 ),
-              ),
-            ],
-          ),
+                Text(
+                  "-${formatRupiah(discount)}",
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF16A34A),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 6),
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1066,10 +968,10 @@ class BookReviewView extends GetView<BookReviewController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     "Total Tagihan",
                     style: TextStyle(
                       fontSize: 14,
@@ -1077,10 +979,10 @@ class BookReviewView extends GetView<BookReviewController> {
                       color: Color(0xFF0F172A),
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    "Estimasi pengerjaan ~60 menit",
-                    style: TextStyle(
+                    "Estimasi pengerjaan ~$estimatedMinutes menit",
+                    style: const TextStyle(
                       fontSize: 11,
                       color: Color(0xFF64748B),
                     ),
@@ -1088,7 +990,7 @@ class BookReviewView extends GetView<BookReviewController> {
                 ],
               ),
               Text(
-                formatRupiah(controller.totalPayment),
+                formatRupiah(total),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

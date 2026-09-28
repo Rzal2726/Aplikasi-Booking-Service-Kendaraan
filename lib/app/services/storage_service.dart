@@ -14,6 +14,8 @@ class StorageService extends GetxService {
   static const String keyActivities = 'app_activities';
   static const String keyUsers = 'app_users';
   static const String keyBookingDraft = 'app_booking_draft';
+  static const String keyWorkshops = 'app_workshops';
+  static const String keyBookStatus = 'app_book_status';
 
   late SharedPreferences _prefs;
 
@@ -30,7 +32,8 @@ class StorageService extends GetxService {
     if (!isInitialized ||
         !_prefs.containsKey(keyVehicles) ||
         !_prefs.containsKey(keySpareParts) ||
-        !_prefs.containsKey(keySymptoms)) {
+        !_prefs.containsKey(keySymptoms) ||
+        !_prefs.containsKey(keyWorkshops)) {
       try {
         final jsonString = await rootBundle.loadString(
           'assets/json/dummyData.json',
@@ -73,8 +76,20 @@ class StorageService extends GetxService {
             jsonEncode(data['activities'] ?? []),
           );
         }
+        if (!_prefs.containsKey(keyBookStatus) || !isInitialized) {
+          await _prefs.setString(
+            keyBookStatus,
+            jsonEncode(data['status'] ?? []),
+          );
+        }
         if (!_prefs.containsKey(keyUsers) || !isInitialized) {
           await _prefs.setString(keyUsers, jsonEncode(data['users'] ?? []));
+        }
+        if (!_prefs.containsKey(keyWorkshops) || !isInitialized) {
+          await _prefs.setString(
+            keyWorkshops,
+            jsonEncode(data['workshops'] ?? []),
+          );
         }
 
         await _prefs.setBool(keyInitialized, true);
@@ -208,6 +223,42 @@ class StorageService extends GetxService {
     final list = getActivities();
     list.insert(0, activity);
     await _prefs.setString(keyActivities, jsonEncode(list));
+  }
+
+  // --- Workshops ---
+  List<Map<String, dynamic>> getWorkshops() {
+    final str = _prefs.getString(keyWorkshops);
+    if (str == null || str.isEmpty) return [];
+    try {
+      final List decoded = jsonDecode(str);
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // --- Users ---
+  List<Map<String, dynamic>> getUsers() {
+    final str = _prefs.getString(keyUsers);
+    if (str == null || str.isEmpty) return [];
+    try {
+      final List decoded = jsonDecode(str);
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // --- Users ---
+  List<Map<String, dynamic>> getStatus() {
+    final str = _prefs.getString(keyBookStatus);
+    if (str == null || str.isEmpty) return [];
+    try {
+      final List decoded = jsonDecode(str);
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   // --- Booking Draft Persistence ---

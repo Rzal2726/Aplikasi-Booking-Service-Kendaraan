@@ -18,26 +18,22 @@ class BookVehicleView extends GetView<BookVehicleController> {
         infoCard(),
         SizedBox(height: 16),
         Obx(() {
+          final _ = controller.selectedVehicle.length;
           return ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: controller.vehicleList.length,
             itemBuilder: (context, index) {
               final data = controller.vehicleList[index];
-              return Obx(
-                () => VehicleSelectionCard(
-                  title: "${data['brand']} ${data['model']}",
-                  year: data['year'].toString(),
-                  licensePlate: data['number'],
-                  mileageText: data['odometer'].toString(),
-                  // imageUrl: imageUrl,
-                  isSelected: controller.isSelected(data),
-                  // status: status,
-                  onTap: () {
-                    controller.selectVehicle(data);
-                    print("object");
-                  },
-                ),
+              return VehicleSelectionCard(
+                title: "${data['brand']} ${data['model']}",
+                year: data['year'].toString(),
+                licensePlate: data['number'],
+                mileageText: data['odometer'].toString(),
+                isSelected: controller.isSelected(data),
+                onTap: () {
+                  controller.selectVehicle(data);
+                },
               );
             },
           );
@@ -210,7 +206,10 @@ class BookVehicleView extends GetView<BookVehicleController> {
               "Model Motor",
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
-            modelDropdown(),
+            Obx(() {
+              final filtered = controller.filteredModelList;
+              return modelDropdown(filtered);
+            }),
             Text(
               textAlign: TextAlign.start,
               "Nomor Plat Polisi",
@@ -263,9 +262,10 @@ class BookVehicleView extends GetView<BookVehicleController> {
     );
   }
 
-  Widget modelDropdown() {
+  Widget modelDropdown(List<Map<String, dynamic>> entries) {
     return DropdownMenu<String>(
-      width: double.infinity, // Fills available container width
+      key: ValueKey(controller.selectedBrand.value),
+      width: double.infinity,
       menuHeight: 250, // Limits dropdown list height with smooth scrolling
       hintText: "Pilih Model",
       requestFocusOnTap: false, // Prevents keyboard pop-up if non-editable
@@ -333,7 +333,7 @@ class BookVehicleView extends GetView<BookVehicleController> {
           controller.selectedModel.value = value;
         }
       },
-      dropdownMenuEntries: controller.modelList.map((data) {
+      dropdownMenuEntries: entries.map((data) {
         final String modelName = data['model'];
         return DropdownMenuEntry<String>(
           value: modelName,

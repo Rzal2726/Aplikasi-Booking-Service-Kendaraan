@@ -8,183 +8,255 @@ class BookScheduleView extends GetView<BookScheduleController> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      children: [
-        _buildWorkshopCard(),
-        const SizedBox(height: 16),
-        _buildWorkMethodCard(),
-        const SizedBox(height: 16),
-        _buildDatePickerCard(),
-        const SizedBox(height: 16),
-        _buildTimeSlotsCard(),
-        const SizedBox(height: 16),
-        _buildPitMechanicAllocationCard(),
-        const SizedBox(height: 24),
-      ],
-    );
+    return Obx(() {
+      final motorCount = controller.serviceController.selectedVehicle.length;
+
+      return ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        children: [
+          _buildWorkshopCard(),
+          const SizedBox(height: 16),
+          if (motorCount >= 2) ...[
+            _buildWorkMethodCard(),
+            const SizedBox(height: 16),
+          ],
+          _buildDatePickerCard(),
+          const SizedBox(height: 16),
+          _buildTimeSlotsCard(),
+          const SizedBox(height: 16),
+          _buildPitMechanicAllocationCard(),
+          const SizedBox(height: 24),
+        ],
+      );
+    });
   }
 
   // --- Section 1: Workshop Information Card ---
   Widget _buildWorkshopCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Workshop Storefront Icon
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1EB),
-                  borderRadius: BorderRadius.circular(10),
+    return Obx(() {
+      final motorCount = controller.serviceController.selectedVehicle.length;
+      final pitCount = int.tryParse(
+            controller.workshopActivePits.value.replaceAll(RegExp(r'[^0-9]'), ''),
+          ) ??
+          0;
+      final supportsParallel = pitCount >= 2 && motorCount >= 2;
+
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Workshop Storefront Icon
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF1EB),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.storefront_outlined,
+                    color: AppColors.primaryColor,
+                    size: 22,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.storefront_outlined,
-                  color: AppColors.primaryColor,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            controller.workshopName.value,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              controller.workshopName.value,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(
-                          Icons.verified,
-                          color: Color(0xFF10B981),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      controller.workshopAddress.value,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF64748B),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.verified,
+                            color: Color(0xFF10B981),
+                            size: 16,
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // "Ganti" Button
-            ],
-          ),
-          const SizedBox(height: 14),
-          // 3 Info Chips Row
-          Row(
-            children: [
-              Expanded(
-                child: _buildInfoChip(
-                  icon: Icons.star_rounded,
-                  iconColor: const Color(0xFFF59E0B),
-                  title: controller.workshopRating.value,
-                  subtitle: controller.workshopReviews.value,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildInfoChip(
-                  icon: Icons.near_me_outlined,
-                  iconColor: const Color(0xFF64748B),
-                  title: controller.workshopDistance.value,
-                  subtitle: controller.workshopTravelTime.value,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildInfoChip(
-                  icon: Icons.precision_manufacturing_outlined,
-                  iconColor: const Color(0xFF0D9488),
-                  title: controller.workshopActivePits.value,
-                  subtitle: controller.workshopPitEquip.value,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Green Banner
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFBBF7D0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: Color(0xFF16A34A),
-                  size: 16,
+                      const SizedBox(height: 3),
+                      Text(
+                        controller.workshopAddress.value,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    "Bengkel ini mendukung pengerjaan serentak 2 pit",
-                    style: TextStyle(
-                      color: Color(0xFF15803D),
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w500,
+                // "Ganti Workshop" Button
+                GestureDetector(
+                  onTap: () => _showWorkshopBottomSheet(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
                     ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: const Color(0xFF86EFAC)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    "Tersedia",
-                    style: TextStyle(
-                      color: Color(0xFF16A34A),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF1EB),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.primaryColor.withOpacity(0.3),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.swap_horiz_rounded,
+                          color: AppColors.primaryColor,
+                          size: 13,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          "Ganti",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(height: 14),
+            // 3 Info Chips Row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInfoChip(
+                    icon: Icons.star_rounded,
+                    iconColor: const Color(0xFFF59E0B),
+                    title: controller.workshopRating.value,
+                    subtitle: controller.workshopReviews.value,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildInfoChip(
+                    icon: Icons.near_me_outlined,
+                    iconColor: const Color(0xFF64748B),
+                    title: controller.workshopDistance.value,
+                    subtitle: controller.workshopTravelTime.value,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildInfoChip(
+                    icon: Icons.precision_manufacturing_outlined,
+                    iconColor: const Color(0xFF0D9488),
+                    title: controller.workshopActivePits.value,
+                    subtitle: controller.workshopPitEquip.value,
+                  ),
+                ),
+              ],
+            ),
+            if (motorCount >= 2) ...[
+              const SizedBox(height: 12),
+              // Green / Yellow Banner depending on pit support
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: supportsParallel
+                      ? const Color(0xFFF0FDF4)
+                      : const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: supportsParallel
+                        ? const Color(0xFFBBF7D0)
+                        : const Color(0xFFFDE68A),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      supportsParallel
+                          ? Icons.check_circle_outline_rounded
+                          : Icons.info_outline_rounded,
+                      color: supportsParallel
+                          ? const Color(0xFF16A34A)
+                          : const Color(0xFFD97706),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        supportsParallel
+                            ? "Bengkel ini mendukung pengerjaan serentak $pitCount pit"
+                            : "Bengkel ini hanya memiliki $pitCount pit aktif",
+                        style: TextStyle(
+                          color: supportsParallel
+                              ? const Color(0xFF15803D)
+                              : const Color(0xFF92400E),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                          color: supportsParallel
+                              ? const Color(0xFF86EFAC)
+                              : const Color(0xFFFDE68A),
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "Tersedia",
+                        style: TextStyle(
+                          color: supportsParallel
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFFD97706),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildInfoChip({
@@ -228,6 +300,210 @@ class BookScheduleView extends GetView<BookScheduleController> {
           ),
         ],
       ),
+    );
+  }
+
+  // --- Workshop Selection Bottom Sheet ---
+  void _showWorkshopBottomSheet() {
+    final workshops = controller.workshopsList;
+    Get.bottomSheet(
+      SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const Text(
+                "Pilih Workshop",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                "Pilih bengkel MotoServ terdekat dari kamu",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (workshops.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      "Tidak ada bengkel tersedia.",
+                      style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                    ),
+                  ),
+                )
+              else
+                ...workshops.map((w) {
+                  final isSelected =
+                      controller.selectedWorkshopId.value == w['id'];
+                  final pitCount = w['pit'] ?? 0;
+                  final ratingRaw = (w['rating'] ?? '4.9').toString().replaceAll(',', '.');
+                  final distanceText = w['distance'] != null
+                      ? '${w['distance']}'
+                      : (w['id'] == 2 ? '12.4 km' : '2.4 km');
+
+                  return GestureDetector(
+                    onTap: () {
+                      Get.back();
+                      controller.selectWorkshop(w);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFFFF8F5)
+                            : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.primaryColor
+                              : const Color(0xFFE2E8F0),
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Icon
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFFFF1EB)
+                                  : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.storefront_outlined,
+                              color: isSelected
+                                  ? AppColors.primaryColor
+                                  : const Color(0xFF64748B),
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  w['name'] ?? '-',
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected
+                                        ? AppColors.primaryColor
+                                        : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  w['address'] ?? '-',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      size: 12,
+                                      color: Color(0xFFF59E0B),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      ratingRaw,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Icon(
+                                      Icons.precision_manufacturing_outlined,
+                                      size: 12,
+                                      color: Color(0xFF0D9488),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      "$pitCount Pit",
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Icon(
+                                      Icons.near_me_outlined,
+                                      size: 12,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      distanceText,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Check icon if selected
+                          if (isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 8),
+                              child: Icon(
+                                Icons.check_circle_rounded,
+                                color: AppColors.primaryColor,
+                                size: 20,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 
@@ -838,7 +1114,9 @@ class BookScheduleView extends GetView<BookScheduleController> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  "Alokasi Pit & Mekanik ($motorCount Motor)",
+                  motorCount > 1
+                      ? "Alokasi Pit & Mekanik ($motorCount Motor)"
+                      : "Alokasi Pit & Mekanik",
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,

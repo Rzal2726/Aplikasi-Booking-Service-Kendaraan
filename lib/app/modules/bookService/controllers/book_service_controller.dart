@@ -60,35 +60,18 @@ class BookServiceController extends GetxController {
     sparePartsList.value = storageService.getSpareParts();
     symptomsList.value = storageService.getSymptoms();
 
-    // Check if vehicles are passed or stored
-    if (selectedVehicle.isEmpty) {
-      final allVehicles = storageService.getVehicles();
-      if (allVehicles.isNotEmpty) {
-        // Pre-select vehicles to match image default (2 motors if available, or vario 160)
-        final vario = allVehicles.firstWhere(
-          (v) => v['model'].toString().toLowerCase().contains('vario'),
-          orElse: () => allVehicles.first,
-        );
-        selectedVehicle.add(vario);
-
-        // If there's another motor, add it as motor 2 to match "Total Estimasi (2 Motor)"
-        final secondMotor = allVehicles.firstWhere(
-          (v) => v['id'] != vario['id'],
-          orElse: () => <String, dynamic>{},
-        );
-        if (secondMotor.isNotEmpty) {
-          selectedVehicle.add(secondMotor);
-        }
-      }
-    }
-
     _initSelectionStates();
-    _restoreDraftOrSetDefaults();
+    if (selectedVehicle.isNotEmpty) {
+      _restoreDraftOrSetDefaults();
+    }
   }
 
   void syncWithSelectedVehicles(List vehicles) {
     selectedVehicle.assignAll(vehicles);
     _initSelectionStates();
+    if (selectedVehicle.isNotEmpty) {
+      _restoreDraftOrSetDefaults();
+    }
   }
 
   void _initSelectionStates() {
@@ -138,25 +121,30 @@ class BookServiceController extends GetxController {
       // Default initial state matching the screenshot image:
       // Motor 1: Servis Berkala (id 1) + MPX2 (id 1) + Busi NGK (id 2) + 2 Symptoms + custom note
       if (selectedVehicle.isNotEmpty) {
-        final firstKey = selectedVehicle[0]['id'].toString();
-        if (motorStates.containsKey(firstKey)) {
-          final s = motorStates[firstKey]!;
-          s.selectedServiceId.value = 1; // Servis Berkala
-          s.selectedSparePartIds.assignAll([1, 2]); // MPX2 and Busi NGK
-          s.selectedSymptoms.assignAll([
-            "Tarikan Gas Berat",
-            "Rem Bunyi Berdecit",
-          ]);
-          s.notesController.text = "Tolong cek getaran CVT saat rpm rendah.";
-          s.isExpanded.value = true;
-        }
-
-        // If there's a second motor, collapse it initially
-        if (selectedVehicle.length > 1) {
-          final secondKey = selectedVehicle[1]['id'].toString();
-          if (motorStates.containsKey(secondKey)) {
-            final s2 = motorStates[secondKey]!;
-            s2.isExpanded.value = false;
+        for (int i = 0; i < selectedVehicle.length; i++) {
+          final key = selectedVehicle[i]['id'].toString();
+          if (motorStates.containsKey(key)) {
+            final s = motorStates[key]!;
+            if (s.selectedServiceId.value == null && serviceList.isNotEmpty) {
+              s.selectedServiceId.value = (serviceList.first['id'] as num).toInt();
+            }
+            if (i == 0) {
+              if (s.selectedSparePartIds.isEmpty) {
+                s.selectedSparePartIds.assignAll([1, 2]); // MPX2 and Busi NGK
+              }
+              if (s.selectedSymptoms.isEmpty) {
+                s.selectedSymptoms.assignAll([
+                  "Tarikan Gas Berat",
+                  "Rem Bunyi Berdecit",
+                ]);
+              }
+              if (s.notesController.text.isEmpty) {
+                s.notesController.text = "Tolong cek getaran CVT saat rpm rendah.";
+              }
+              s.isExpanded.value = true;
+            } else {
+              s.isExpanded.value = false;
+            }
           }
         }
       }
@@ -213,13 +201,16 @@ class BookServiceController extends GetxController {
   }
 
   void addVehicleToBooking(Map vehicle) {
-    if (!selectedVehicle.any((v) => v['id'] == vehicle['id'])) {
+    if (!selectedVehicle.any((v) => v['id']?.toString() == vehicle['id']?.toString())) {
       selectedVehicle.add(vehicle);
       final key = vehicle['id'].toString();
       motorStates[key] = MotorSelectionState(
         vehicleId: vehicle['id'],
         expanded: true,
       );
+      if (serviceList.isNotEmpty) {
+        motorStates[key]!.selectedServiceId.value = (serviceList.first['id'] as num).toInt();
+      }
       motorStates[key]!.notesController.addListener(() {
         persistDraft();
       });
@@ -233,7 +224,7 @@ class BookServiceController extends GetxController {
       showInfoSnackbar("Minimal 1 motor dalam booking servis");
       return;
     }
-    selectedVehicle.removeWhere((v) => v['id'] == vehicleId);
+    selectedVehicle.removeWhere((v) => v['id']?.toString() == vehicleId.toString());
     motorStates.remove(vehicleId.toString());
     persistDraft();
   }

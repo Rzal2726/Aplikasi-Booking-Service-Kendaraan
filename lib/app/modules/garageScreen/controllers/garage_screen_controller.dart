@@ -26,6 +26,8 @@ class GarageScreenController extends GetxController {
     super.onInit();
     storageService = Get.find<StorageService>();
     initGarage();
+    // Reset selected model whenever brand changes
+    ever(selectedBrand, (_) => selectedModel.value = '');
   }
 
   Future<void> initGarage() async {
@@ -72,6 +74,20 @@ class GarageScreenController extends GetxController {
     } finally {
       loadingMap['getBrand'] = false;
     }
+  }
+
+  /// Returns only models whose brandId matches the currently selected brand.
+  List<Map<String, dynamic>> get filteredModelList {
+    if (selectedBrand.value.isEmpty) return [];
+    final brandEntry = brandList.firstWhereOrNull(
+      (b) => b['brand']?.toString() == selectedBrand.value,
+    );
+    if (brandEntry == null) return [];
+    final brandId = brandEntry['id'];
+    return modelList
+        .where((m) => m['brandId']?.toString() == brandId?.toString())
+        .map((m) => Map<String, dynamic>.from(m as Map))
+        .toList();
   }
 
   Future<void> saveVehicle() async {
@@ -135,4 +151,62 @@ class GarageScreenController extends GetxController {
       odometer.value = "";
     }
   }
+
+  Future<void> setMainVehicle(dynamic id) async {
+    try {
+      final list = storageService.getVehicles();
+      for (final v in list) {
+        v['isMain'] = (v['id'] == id);
+      }
+      await storageService.saveVehicles(list);
+      await getVehicle();
+      if (Get.isBottomSheetOpen == true) {
+        Get.back();
+      }
+      showSuccessSnackbar("Berhasil mengubah motor utama!");
+    } catch (e) {
+      showErrorSnackbar("Gagal mengubah status motor utama.");
+    }
+  }
+
+  Future<void> deleteVehicle(dynamic id) async {
+    try {
+      await storageService.deleteVehicle(id);
+      await getVehicle();
+      if (Get.isBottomSheetOpen == true) {
+        Get.back();
+      }
+      showSuccessSnackbar("Motor berhasil dihapus dari garasi!");
+    } catch (e) {
+      showErrorSnackbar("Gagal menghapus motor dari garasi.");
+    }
+  }
+
+  List<Map<String, dynamic>> getVehicleActivities(
+    dynamic vehicleId,
+    String plateNumber,
+  ) {
+    final all = storageService.getActivities();
+    final cleanPlate = plateNumber.replaceAll(' ', '').toUpperCase();
+    return all.where((act) {
+      final pits = act['pitAssignments'] as List? ?? [];
+      final hasPit = pits.any((p) {
+        final pId = p['vehicleId'];
+        final pPlate = (p['plateNumber'] ?? '')
+            .toString()
+            .replaceAll(' ', '')
+            .toUpperCase();
+        return pId == vehicleId || (cleanPlate.isNotEmpty && pPlate == cleanPlate);
+      });
+      if (hasPit) return true;
+
+      final subActs = act['activities'] as List? ?? [];
+      final hasSub = subActs.any((sa) => sa['vehicleID'] == vehicleId);
+      return hasSub;
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> getSpareParts() => storageService.getSpareParts();
+  List<String> getSymptoms() => storageService.getSymptoms();
+  List<Map<String, dynamic>> getServices() => storageService.getServices();
 }

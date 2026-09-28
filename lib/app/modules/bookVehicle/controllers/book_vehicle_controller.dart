@@ -26,21 +26,14 @@ class BookVehicleController extends GetxController {
     super.onInit();
     storageService = Get.find<StorageService>();
     initVehicle();
+    // Reset selected model whenever brand changes
+    ever(selectedBrand, (_) => selectedModel.value = '');
   }
 
   Future<void> initVehicle() async {
     await getVehicle();
     await getBrand();
     await getModel();
-
-    // Default: If no vehicle selected yet, select the primary vehicle (or first one)
-    if (selectedVehicle.isEmpty && vehicleList.isNotEmpty) {
-      final mainVehicle = vehicleList.firstWhere(
-        (v) => v['isMain'] == true,
-        orElse: () => vehicleList.first,
-      );
-      selectedVehicle.add(mainVehicle);
-    }
   }
 
   Future<void> getVehicle() async {
@@ -77,6 +70,20 @@ class BookVehicleController extends GetxController {
     } finally {
       loadingMap['getBrand'] = false;
     }
+  }
+
+  /// Returns only models whose brandId matches the currently selected brand.
+  List<Map<String, dynamic>> get filteredModelList {
+    if (selectedBrand.value.isEmpty) return [];
+    final brandEntry = brandList.firstWhereOrNull(
+      (b) => b['brand']?.toString() == selectedBrand.value,
+    );
+    if (brandEntry == null) return [];
+    final brandId = brandEntry['id'];
+    return modelList
+        .where((m) => m['brandId']?.toString() == brandId?.toString())
+        .map((m) => Map<String, dynamic>.from(m as Map))
+        .toList();
   }
 
   Future<void> saveVehicle() async {
@@ -144,13 +151,17 @@ class BookVehicleController extends GetxController {
 
   void selectVehicle(Map data) {
     if (isSelected(data)) {
-      selectedVehicle.removeWhere((item) => item['id'] == data['id']);
+      selectedVehicle.removeWhere(
+        (item) => item['id']?.toString() == data['id']?.toString(),
+      );
     } else {
       selectedVehicle.add(data);
     }
   }
 
   bool isSelected(Map data) {
-    return selectedVehicle.any((test) => test['id'] == data['id']);
+    return selectedVehicle.any(
+      (test) => test['id']?.toString() == data['id']?.toString(),
+    );
   }
 }

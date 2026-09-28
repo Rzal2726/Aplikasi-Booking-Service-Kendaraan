@@ -174,7 +174,7 @@ class HomeScreenView extends GetView<HomeScreenController> {
                         color: Colors.grey.shade700,
                       ),
                       Text(
-                        '2 Motor Terdaftar',
+                        '${controller.garageController.vehicleList.length} Motor Terdaftar',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -546,7 +546,8 @@ class HomeScreenView extends GetView<HomeScreenController> {
           ),
           Obx(() {
             final activityList = controller.activityController.activityList
-                .where((data) => data['status'] == "inprogress")
+                .where((data) => data['status'] != "COMPLETED")
+                .take(3)
                 .toList();
             if (activityList.isEmpty) {
               return EmptyCard(
@@ -562,6 +563,7 @@ class HomeScreenView extends GetView<HomeScreenController> {
             } else {
               return ListView.builder(
                 shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: activityList.length,
                 itemBuilder: (context, index) {
                   final activity = activityList[index];
@@ -581,6 +583,7 @@ class HomeScreenView extends GetView<HomeScreenController> {
                     ),
                     child: Column(
                       children: [
+                        // Text(activity.toString()),
                         Container(
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -593,14 +596,13 @@ class HomeScreenView extends GetView<HomeScreenController> {
                           child: Row(
                             spacing: 8,
                             children: [
-                              Icon(Icons.calendar_month),
-                              Expanded(
-                                child: Text(
-                                  "${date.day}/${date.month}/${date.year}",
-                                ),
+                              Icon(
+                                Icons.location_pin,
+                                color: AppColors.primaryColor,
                               ),
+                              Expanded(child: Text("${activity['workshop']}")),
                               Text(
-                                "${activity['activities'].length} Motor",
+                                "${activity['pitAssignments'].length} Motor",
                                 style: TextStyle(
                                   color: AppColors.primaryColor.shade700,
                                   fontWeight: FontWeight.w600,
@@ -617,9 +619,24 @@ class HomeScreenView extends GetView<HomeScreenController> {
                             spacing: 8,
                             children: [
                               // Text(activity.toString()),
-                              if (activity['activities'].length > 1) ...[
-                                ...activity['activities'].map((data) {
-                                  return Container(
+                              ...activity['pitAssignments'].asMap().entries.map((
+                                entry,
+                              ) {
+                                final pitIdx = entry.key;
+                                final data = entry.value;
+                                return InkWell(
+                                  onTap: () {
+                                    Get.toNamed(
+                                      Routes.LIVE_TRACKING,
+                                      arguments: {
+                                        'id': activity['id'],
+                                        'activity': activity,
+                                        'selectedPitIndex': pitIdx,
+                                      },
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
                                     padding: EdgeInsets.all(16),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
@@ -635,7 +652,7 @@ class HomeScreenView extends GetView<HomeScreenController> {
                                           children: [
                                             Expanded(
                                               child: Text(
-                                                "${controller.garageController.getVehicleById(data['vehicleID'])['brand']} ${controller.garageController.getVehicleById(data['vehicleID'])['model']}",
+                                                "${data['vehicleName']}",
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.w600,
                                                   fontSize: 14,
@@ -661,30 +678,43 @@ class HomeScreenView extends GetView<HomeScreenController> {
                                             ),
                                           ],
                                         ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF1E293B),
-                                            borderRadius: BorderRadius.circular(
-                                              4,
+                                        Row(
+                                          spacing: 8,
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors
+                                                    .backgroundSwatch
+                                                    .shade300,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                data['plateNumber'],
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 1.0,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                          child: Text(
-                                            controller.garageController
-                                                    .getVehicleById(
-                                                      data['vehicleID'],
-                                                    )['number'] ??
-                                                '',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1.0,
+                                            Expanded(
+                                              child: Text(
+                                                "• ${data['pit']}",
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade700,
+                                                  fontSize: 12,
+                                                  letterSpacing: 1.0,
+                                                ),
+                                              ),
                                             ),
-                                          ),
+                                          ],
                                         ),
                                         SizedBox(height: 8),
                                         LinearProgressIndicator(
@@ -695,16 +725,28 @@ class HomeScreenView extends GetView<HomeScreenController> {
                                             16,
                                           ),
                                           minHeight: 8,
+                                          backgroundColor: AppColors
+                                              .backgroundSwatch
+                                              .shade300,
                                         ),
+                                        SizedBox(height: 8),
                                       ],
                                     ),
-                                  );
-                                }),
-                              ],
+                                  ),
+                                );
+                              }),
                               SizedBox(
                                 width: double.infinity,
                                 child: ButtonPrimary(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Get.toNamed(
+                                      Routes.LIVE_TRACKING,
+                                      arguments: {
+                                        'id': activity['id'],
+                                        'activity': activity,
+                                      },
+                                    );
+                                  },
                                   text: "Live Tracking",
                                   icon: Icon(Icons.track_changes_outlined),
                                 ),
@@ -883,6 +925,7 @@ class HomeScreenView extends GetView<HomeScreenController> {
           Obx(() {
             final activityList = controller.activityController.activityList
                 .where((data) => data['status'] != "inprogress")
+                .take(3)
                 .toList();
             if (activityList.isEmpty) {
               return EmptyCard(
@@ -898,6 +941,7 @@ class HomeScreenView extends GetView<HomeScreenController> {
             } else {
               return ListView.builder(
                 shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
                 itemCount: activityList.length,
                 itemBuilder: (context, index) {
                   final activity = activityList[index];
@@ -956,39 +1000,67 @@ class HomeScreenView extends GetView<HomeScreenController> {
                             spacing: 8,
                             children: [
                               // Text(activity.toString()),
-                              if (activity['activities'].length > 1) ...[
+                              // Text(activity.toString()),
+                              if (activity['pitAssignments'].length > 1) ...[
                                 Text(
-                                  "${activity['activities'].length} Motor Sekaligus",
-                                  style: TextStyle(
+                                  "${activity['pitAssignments'].length} Motor Sekaligus",
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,
+                                    color: Colors.black87,
                                   ),
                                 ),
                                 RichText(
                                   text: TextSpan(
-                                    children: [
-                                      ...activity['activities'].map(
-                                        (data) => TextSpan(
-                                          text:
-                                              "${controller.garageController.getVehicleById(data['vehicleID'])['brand']} ${controller.garageController.getVehicleById(data['vehicleID'])['model']}\n",
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                    children:
+                                        (activity['pitAssignments'] as List)
+                                            .map<TextSpan>(
+                                              (data) => TextSpan(
+                                                text:
+                                                    "${data['vehicleName']}\n",
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
                                   ),
                                 ),
                               ] else ...[
-                                Text(
-                                  "${controller.garageController.getVehicleById(activity['activities'].first['vehicleID'])}",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                  ),
+                                Builder(
+                                  builder: (context) {
+                                    final vehicle = controller.garageController
+                                        .getVehicleById(
+                                          activity['activities']
+                                              .first['vehicleID'],
+                                        );
+                                    return Text(
+                                      "${vehicle['brand']} ${vehicle['model']}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                        color: Colors.black87,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
+                              Text(
+                                (activity['activities'].first['serviceIds']
+                                        as List)
+                                    .map(
+                                      (data) => controller.serviceController
+                                          .getServiceById(data)['name']
+                                          .toString(),
+                                    )
+                                    .toSet()
+                                    .join(', '),
+                                style: TextStyle(
+                                  color: AppColors.primaryColor.shade900,
+                                  fontSize: 14,
+                                ),
+                              ),
                               RichText(
                                 text: TextSpan(
                                   children: [

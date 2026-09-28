@@ -20,13 +20,42 @@ class BookScreenController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Synchronize vehicle selection
-    if (vehicleController.selectedVehicle.isNotEmpty) {
-      selectedVehicle.assignAll(vehicleController.selectedVehicle);
-      serviceController.syncWithSelectedVehicles(vehicleController.selectedVehicle);
-    } else if (serviceController.selectedVehicle.isNotEmpty) {
-      selectedVehicle.assignAll(serviceController.selectedVehicle);
-      vehicleController.selectedVehicle.assignAll(serviceController.selectedVehicle);
+    pageIndex.value = 0;
+    initVehicleSelection();
+  }
+
+  void initVehicleSelection() {
+    final args = Get.arguments;
+    dynamic clickedVehicle;
+
+    if (args is Map) {
+      if (args['vehicle'] != null) {
+        clickedVehicle = args['vehicle'];
+      } else if (args['vehicleId'] != null) {
+        final List all = vehicleController.vehicleList.isNotEmpty
+            ? vehicleController.vehicleList
+            : vehicleController.storageService.getVehicles();
+        for (final v in all) {
+          if (v['id']?.toString() == args['vehicleId']?.toString()) {
+            clickedVehicle = v;
+            break;
+          }
+        }
+      } else if (args.containsKey('brand') && args.containsKey('model')) {
+        clickedVehicle = args;
+      }
+    }
+
+    if (clickedVehicle != null && clickedVehicle is Map) {
+      final selectedMap = Map<String, dynamic>.from(clickedVehicle);
+      vehicleController.selectedVehicle.assignAll([selectedMap]);
+      selectedVehicle.assignAll([selectedMap]);
+      serviceController.syncWithSelectedVehicles([selectedMap]);
+    } else {
+      // Default to none
+      vehicleController.selectedVehicle.clear();
+      selectedVehicle.clear();
+      serviceController.syncWithSelectedVehicles([]);
     }
   }
 
@@ -38,6 +67,7 @@ class BookScreenController extends GetxController {
       }
       selectedVehicle.assignAll(vehicleController.selectedVehicle);
       serviceController.syncWithSelectedVehicles(vehicleController.selectedVehicle);
+      scheduleController.updatePitAssignments();
     } else if (pageIndex.value == 1) {
       // Validate that at least one service is selected for each motor
       for (final v in serviceController.selectedVehicle) {
@@ -49,6 +79,7 @@ class BookScreenController extends GetxController {
           return;
         }
       }
+      scheduleController.updatePitAssignments();
     }
     if (pageIndex.value < 3) {
       pageIndex.value++;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'package:get/get.dart';
 import 'package:project/app/components/AppIcon.dart';
@@ -7,6 +8,7 @@ import 'package:project/app/components/cards/cardBasic.dart';
 import 'package:project/app/components/cards/emptyCard.dart';
 import 'package:project/app/const/appcolors.dart';
 import 'package:project/app/routes/app_pages.dart';
+import 'package:project/app/services/formatter.dart';
 
 import '../controllers/garage_screen_controller.dart';
 
@@ -15,7 +17,9 @@ class GarageScreenView extends GetView<GarageScreenController> {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () async {},
+      onRefresh: () async {
+        await controller.initGarage();
+      },
       child: ListView(
         padding: EdgeInsets.all(16),
         children: [
@@ -49,14 +53,10 @@ class GarageScreenView extends GetView<GarageScreenController> {
                   physics: NeverScrollableScrollPhysics(),
                   itemCount: vehicleList.length,
                   itemBuilder: (context, index) {
-                    final vehicle = vehicleList[index];
-                    return vehicleCard(
-                      number: vehicle['number'] ?? "",
-                      name: vehicle['brand'] ?? "",
-                      model: vehicle['model'] ?? "",
-                      year: vehicle['year'].toString(),
-                      odometer: vehicle['odometer'].toString(),
+                    final vehicle = Map<String, dynamic>.from(
+                      vehicleList[index] as Map,
                     );
+                    return vehicleCard(vehicle: vehicle);
                   },
                 ),
               ],
@@ -128,15 +128,16 @@ class GarageScreenView extends GetView<GarageScreenController> {
     );
   }
 
-  Widget vehicleCard({
-    required String number,
-    required String name,
-    required String model,
-    required String year,
-    required String odometer,
-  }) {
+  Widget vehicleCard({required Map<String, dynamic> vehicle}) {
+    final number = vehicle['number'] ?? "";
+    final brand = vehicle['brand'] ?? "";
+    final model = vehicle['model'] ?? "";
+    final year = vehicle['year']?.toString() ?? "";
+    final num odo = num.tryParse(vehicle['odometer']?.toString() ?? '0') ?? 0;
+    final isMain = vehicle['isMain'] == true;
+
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       child: BasicCard(
         content: Column(
           children: [
@@ -148,37 +149,76 @@ class GarageScreenView extends GetView<GarageScreenController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          number,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 10,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              number,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (isMain) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xFF86EFAC),
+                                ),
+                              ),
+                              child: const Text(
+                                "Utama",
+                                style: TextStyle(
+                                  color: Color(0xFF16A34A),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        "$name $model",
-                        style: TextStyle(
+                        "$brand $model",
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontSize: 15,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
-                        "Tahun ${year} • ${odometer} KM",
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        "Tahun $year • ${NumberFormat('#,###', 'id_ID').format(odo)} KM",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
             Row(
               spacing: 8,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -186,23 +226,931 @@ class GarageScreenView extends GetView<GarageScreenController> {
                 Expanded(
                   child: ButtonPrimary(
                     onPressed: () {
-                      Get.toNamed(Routes.BOOK_SCREEN);
+                      Get.toNamed(
+                        Routes.BOOK_SCREEN,
+                        arguments: {
+                          'vehicle': vehicle,
+                          'vehicleId': vehicle['id'],
+                          'fromGarage': true,
+                        },
+                      );
                     },
                     text: "Booking Servis",
-                    icon: Icon(Icons.build),
+                    icon: const Icon(Icons.build_rounded, size: 16),
                   ),
                 ),
                 ButtonPrimary(
                   color: Colors.grey.shade100,
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.bottomSheet(
+                      vehicleDetailBottomSheet(vehicle),
+                      isScrollControlled: true,
+                    );
+                  },
                   text: "Detail",
                   textColor: Colors.black,
-                  icon: Icon(Icons.info, color: Colors.black),
+                  icon: const Icon(
+                    Icons.info_outline,
+                    color: Colors.black,
+                    size: 16,
+                  ),
                 ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Vehicle Detail BottomSheet ──────────────────────────────────────────
+  Widget vehicleDetailBottomSheet(Map<String, dynamic> vehicle) {
+    final brand = vehicle['brand'] ?? '—';
+    final model = vehicle['model'] ?? '—';
+    final number = vehicle['number'] ?? '—';
+    final year = vehicle['year']?.toString() ?? '—';
+    final num odo = num.tryParse(vehicle['odometer']?.toString() ?? '0') ?? 0;
+    final isMain = vehicle['isMain'] == true;
+
+    // Maintenance calculations based on 4,000 KM service interval
+    final nextServiceKm = ((odo / 4000).floor() + 1) * 4000;
+    final kmRemaining = nextServiceKm - odo;
+    final progressToNext = ((odo % 4000) / 4000.0).clamp(0.0, 1.0);
+
+    // OEM Spare parts and Symptoms from system JSON
+    final spareParts = controller.getSpareParts();
+    final symptoms = controller.getSymptoms();
+
+    // Service History for this specific vehicle
+    final activities = controller.getVehicleActivities(vehicle['id'], number);
+
+    return SafeArea(
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(Get.context!).size.height * 0.88,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle & Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Column(
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryColor.withAlpha(25),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.two_wheeler_rounded,
+                          color: AppColors.primaryColor,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Detail Kendaraan",
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            Text(
+                              "Spesifikasi & Riwayat Perawatan",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          if (Get.isBottomSheetOpen == true) Get.back();
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 20,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+            // Scrollable Content
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                children: [
+                  // 1. Vehicle Hero Card
+                  _buildVehicleHeroCard(
+                    brand: brand,
+                    model: model,
+                    number: number,
+                    year: year,
+                    odometer: odo,
+                    isMain: isMain,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 2. Status & Rekomendasi Servis Berkala
+                  _buildServiceIntervalCard(
+                    odo: odo,
+                    nextServiceKm: nextServiceKm,
+                    kmRemaining: kmRemaining,
+                    progress: progressToNext,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 3. Suku Cadang Rekomendasi Pabrikan (OEM Data)
+                  // if (spareParts.isNotEmpty) ...[
+                  //   _buildSparePartsSection(spareParts),
+                  //   const SizedBox(height: 16),
+                  // ],
+
+                  // 4. Gejala Yang Perlu Diperhatikan (Data Gejala)
+                  if (symptoms.isNotEmpty) ...[
+                    _buildSymptomsSection(symptoms),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 5. Riwayat Servis Motor Ini
+                  _buildVehicleHistorySection(activities),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+
+            // Bottom Actions Area
+            _buildBottomActionButtons(vehicle, isMain),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVehicleHeroCard({
+    required String brand,
+    required String model,
+    required String number,
+    required String year,
+    required num odometer,
+    required bool isMain,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Indonesian License Plate Style
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  number,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (isMain)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF86EFAC)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 13,
+                        color: Color(0xFF16A34A),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        "Motor Utama",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF16A34A),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: const Text(
+                    "Motor Terdaftar",
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "$brand $model",
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // 3 stat tiles
+          Row(
+            children: [
+              Expanded(
+                child: _buildHeroStatTile(
+                  icon: Icons.calendar_today_outlined,
+                  label: "Tahun",
+                  value: year,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildHeroStatTile(
+                  icon: Icons.speed_outlined,
+                  label: "Odometer",
+                  value:
+                      "${NumberFormat('#,###', 'id_ID').format(odometer)} KM",
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildHeroStatTile(
+                  icon: Icons.verified_outlined,
+                  label: "Merk Pabrikan",
+                  value: brand,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroStatTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: AppColors.primaryColor),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceIntervalCard({
+    required num odo,
+    required num nextServiceKm,
+    required num kmRemaining,
+    required double progress,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.alarm_on_rounded,
+                  color: Color(0xFF16A34A),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  "Status Perawatan & Jadwal Servis",
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF166534),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Servis Berikutnya: ${NumberFormat('#,###', 'id_ID').format(nextServiceKm)} KM",
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              Text(
+                kmRemaining > 0
+                    ? "Sisa ~${NumberFormat('#,###', 'id_ID').format(kmRemaining)} KM"
+                    : "Waktunya Servis!",
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                  color: kmRemaining > 0
+                      ? const Color(0xFF16A34A)
+                      : const Color(0xFFDC2626),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              color: const Color(0xFF16A34A),
+              backgroundColor: const Color(0xFFDCFCE7),
+              minHeight: 7,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Anjuran Pabrikan: Servis berkala dan ganti oli disarankan tiap 4.000 KM atau 3 bulan agar kondisi mesin dan transmisi tetap prima.",
+            style: TextStyle(
+              fontSize: 11.5,
+              color: Color(0xFF374151),
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSparePartsSection(List<Map<String, dynamic>> spareParts) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(
+              Icons.settings_suggest_outlined,
+              size: 16,
+              color: AppColors.primaryColor,
+            ),
+            SizedBox(width: 6),
+            Text(
+              "Suku Cadang Rekomendasi (OEM)",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          "Komponen orisinal pabrikan sesuai spesifikasi mesin",
+          style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 10),
+        ...spareParts.map((part) {
+          final isOem = part['isOem'] == true;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.build_circle_outlined,
+                    color: AppColors.primaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              part['name'] ?? '—',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          if (isOem) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                "OEM",
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        part['description'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  formatRupiah((part['price'] as num?) ?? 0),
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildSymptomsSection(List<String> symptoms) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(
+              Icons.report_problem_outlined,
+              size: 16,
+              color: Color(0xFFD97706),
+            ),
+            SizedBox(width: 6),
+            Text(
+              "Gejala Yang Perlu Diperhatikan",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          "Jika motor mengalami hal berikut, disarankan segera servis",
+          style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: symptoms.map((sym) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.circle, size: 5, color: Color(0xFFD97706)),
+                  const SizedBox(width: 6),
+                  Text(
+                    sym,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVehicleHistorySection(List<Map<String, dynamic>> activities) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.history_rounded,
+              size: 16,
+              color: AppColors.primaryColor,
+            ),
+            const SizedBox(width: 6),
+            const Text(
+              "Riwayat Servis Motor Ini",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            const Spacer(),
+            if (activities.isNotEmpty)
+              Text(
+                "${activities.length} Sesi",
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (activities.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.history_toggle_off_rounded,
+                  size: 20,
+                  color: Color(0xFF94A3B8),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "Belum ada riwayat servis. Pesan servis pertama Anda sekarang!",
+                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...activities.map((act) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        act['workshop'] ?? 'Bengkel Resmi',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          "#${act['code'] ?? ''}",
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF475569),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 12,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        act['scheduleDate'] ?? (act['date'] ?? '—'),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.payments_outlined,
+                        size: 12,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        formatRupiah((act['totalPrice'] as num?) ?? 0),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildBottomActionButtons(Map<String, dynamic> vehicle, bool isMain) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ButtonPrimary(
+              onPressed: () {
+                if (Get.isBottomSheetOpen == true) Get.back();
+                Get.toNamed(
+                  Routes.BOOK_SCREEN,
+                  arguments: {
+                    'vehicle': vehicle,
+                    'vehicleId': vehicle['id'],
+                    'fromGarage': true,
+                  },
+                );
+              },
+              text: "Booking Servis Motor Ini",
+              icon: const Icon(
+                Icons.build_circle_outlined,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              if (!isMain) ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      controller.setMainVehicle(vehicle['id']);
+                    },
+                    icon: const Icon(
+                      Icons.star_outline_rounded,
+                      size: 16,
+                      color: Color(0xFF16A34A),
+                    ),
+                    label: const Text(
+                      "Jadikan Utama",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF16A34A),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF86EFAC)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Get.dialog(
+                      AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        title: const Text("Hapus Motor"),
+                        content: Text(
+                          "Hapus ${vehicle['brand']} ${vehicle['model']} (${vehicle['number']}) dari garasi?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Get.back(),
+                            child: const Text("Batal"),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFDC2626),
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () {
+                              Get.back(); // close dialog
+                              controller.deleteVehicle(vehicle['id']);
+                            },
+                            child: const Text("Hapus"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: 16,
+                    color: Color(0xFFDC2626),
+                  ),
+                  label: const Text(
+                    "Hapus Motor",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFDC2626),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFFCA5A5)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -293,7 +1241,10 @@ class GarageScreenView extends GetView<GarageScreenController> {
               "Model Motor",
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
-            modelDropdown(),
+            Obx(() {
+              final filtered = controller.filteredModelList;
+              return modelDropdown(filtered);
+            }),
             Text(
               textAlign: TextAlign.start,
               "Nomor Plat Polisi",
@@ -346,9 +1297,10 @@ class GarageScreenView extends GetView<GarageScreenController> {
     );
   }
 
-  Widget modelDropdown() {
+  Widget modelDropdown(List<Map<String, dynamic>> entries) {
     return DropdownMenu<String>(
-      width: double.infinity, // Fills available container width
+      key: ValueKey(controller.selectedBrand.value),
+      width: double.infinity,
       menuHeight: 250, // Limits dropdown list height with smooth scrolling
       hintText: "Pilih Model",
       requestFocusOnTap: false, // Prevents keyboard pop-up if non-editable
@@ -416,7 +1368,7 @@ class GarageScreenView extends GetView<GarageScreenController> {
           controller.selectedModel.value = value;
         }
       },
-      dropdownMenuEntries: controller.modelList.map((data) {
+      dropdownMenuEntries: entries.map((data) {
         final String modelName = data['model'];
         return DropdownMenuEntry<String>(
           value: modelName,

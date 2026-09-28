@@ -20,6 +20,8 @@ import '../modules/garageScreen/bindings/garage_screen_binding.dart';
 import '../modules/garageScreen/views/garage_screen_view.dart';
 import '../modules/homeScreen/bindings/home_screen_binding.dart';
 import '../modules/homeScreen/views/home_screen_view.dart';
+import '../modules/liveTracking/bindings/live_tracking_binding.dart';
+import '../modules/liveTracking/views/live_tracking_view.dart';
 import '../modules/serviceScreen/bindings/service_screen_binding.dart';
 import '../modules/serviceScreen/views/service_screen_view.dart';
 
@@ -85,6 +87,11 @@ class AppPages {
       name: _Paths.BOOK_CONFIRM,
       page: () => const BookConfirmView(),
       binding: BookConfirmBinding(),
+    ),
+    GetPage(
+      name: _Paths.LIVE_TRACKING,
+      page: () => const LiveTrackingView(),
+      binding: LiveTrackingBinding(),
     ),
   ];
 }
