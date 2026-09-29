@@ -19,7 +19,8 @@ class BookReviewView extends GetView<BookReviewController> {
     return Obx(() {
       final vehicles = serviceController.selectedVehicle;
       final motorCount = vehicles.length;
-      final isParallel = scheduleController.workMethod.value == 'parallel' && motorCount >= 2;
+      final isParallel =
+          scheduleController.workMethod.value == 'parallel' && motorCount >= 2;
 
       return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -30,7 +31,11 @@ class BookReviewView extends GetView<BookReviewController> {
 
           // 2. Workshop & Schedule Summary Card
           _buildWorkshopScheduleCard(
-              scheduleController, bookScreenController, isParallel, motorCount),
+            scheduleController,
+            bookScreenController,
+            isParallel,
+            motorCount,
+          ),
           const SizedBox(height: 16),
 
           // 3. Simultan Dark Banner (Only for 2 or more motors)
@@ -165,8 +170,8 @@ class BookReviewView extends GetView<BookReviewController> {
     bool isParallel,
     int motorCount,
   ) {
-    final selectedDate =
-        scheduleController.availableDates[scheduleController.selectedDateIndex.value];
+    final selectedDate = scheduleController
+        .availableDates[scheduleController.selectedDateIndex.value];
     final dateStr =
         "${selectedDate['day']}, ${selectedDate['date']} ${scheduleController.selectedMonthYear.value}";
     final timeStr = "${scheduleController.selectedTimeSlot.value} WIB";
@@ -329,7 +334,9 @@ class BookReviewView extends GetView<BookReviewController> {
 
   // --- 3. Simultan Dark Banner ---
   Widget _buildSimultanBanner(
-      BookScheduleController scheduleController, bool isParallel) {
+    BookScheduleController scheduleController,
+    bool isParallel,
+  ) {
     final assignments = scheduleController.pitAssignments;
     final pitLabels = assignments.map((a) => a['pit'] ?? '').toList();
     final pitText = pitLabels.isNotEmpty ? pitLabels.join(' & ') : '\u2014';
@@ -360,9 +367,7 @@ class BookReviewView extends GetView<BookReviewController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isParallel
-                      ? "Simultan: $pitText"
-                      : "Berurutan: $pitText",
+                  isParallel ? "Simultan: $pitText" : "Berurutan: $pitText",
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -421,15 +426,23 @@ class BookReviewView extends GetView<BookReviewController> {
     final state = serviceController.getSelectionState(vehicleId);
 
     return Obx(() {
-      final selectedService = serviceController.getSelectedServiceData(vehicleId);
-      final selectedParts = serviceController.getSelectedSparePartsData(vehicleId);
+      final selectedService = serviceController.getSelectedServiceData(
+        vehicleId,
+      );
+      final selectedParts = serviceController.getSelectedSparePartsData(
+        vehicleId,
+      );
       final notes = state.notesController.text;
       final subtotal = serviceController.getVehicleSubtotal(vehicleId);
-      final durationMinutes = serviceController.getVehicleEstimatedMinutes(vehicleId);
+      final durationMinutes = serviceController.getVehicleEstimatedMinutes(
+        vehicleId,
+      );
 
       // Find pit assignment for this vehicle
       final pitAssignments = Get.find<BookScheduleController>().pitAssignments;
-      final pitInfo = pitAssignments.length > index ? pitAssignments[index] : null;
+      final pitInfo = pitAssignments.length > index
+          ? pitAssignments[index]
+          : null;
       final pitLabel = pitInfo?['pit'] ?? "\u2014";
       final mechanic = pitInfo?['mechanic'] ?? "\u2014";
 
@@ -454,7 +467,10 @@ class BookReviewView extends GetView<BookReviewController> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primaryColor,
                     borderRadius: BorderRadius.circular(5),
@@ -569,16 +585,18 @@ class BookReviewView extends GetView<BookReviewController> {
               const SizedBox(height: 10),
             ],
             // Selected Spare Parts
-            ...selectedParts.map((part) => Column(
-                  children: [
-                    _buildReviewItem(
-                      title: part['name'] ?? "\u2014",
-                      subtitle: part['description'] ?? "",
-                      price: (part['price'] as num).toDouble(),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                )),
+            ...selectedParts.map(
+              (part) => Column(
+                children: [
+                  _buildReviewItem(
+                    title: part['name'] ?? "\u2014",
+                    subtitle: part['description'] ?? "",
+                    price: (part['price'] as num).toDouble(),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
             // Owner Notes (if any)
             if (notes.isNotEmpty) ...[
               _buildOwnerNote(notes),
@@ -592,7 +610,9 @@ class BookReviewView extends GetView<BookReviewController> {
                 Text(
                   "Subtotal $motorLabel (~$durationMinutes Menit)",
                   style: const TextStyle(
-                      fontSize: 12, color: Color(0xFF64748B)),
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                  ),
                 ),
                 Text(
                   formatRupiah(subtotal),
@@ -633,10 +653,7 @@ class BookReviewView extends GetView<BookReviewController> {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF64748B),
-                ),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
               ),
             ],
           ),
@@ -726,21 +743,14 @@ class BookReviewView extends GetView<BookReviewController> {
                 color: Color(0xFF475569),
               ),
               const SizedBox(width: 8),
-              const Text(
-                "Informasi Pemesan & Kedatangan",
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                "Ubah",
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryColor,
+              Expanded(
+                child: const Text(
+                  "Informasi Pemesan & Kedatangan",
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
                 ),
               ),
             ],
@@ -891,11 +901,7 @@ class BookReviewView extends GetView<BookReviewController> {
         children: [
           const Row(
             children: [
-              Icon(
-                Icons.receipt_outlined,
-                size: 18,
-                color: Color(0xFF475569),
-              ),
+              Icon(Icons.receipt_outlined, size: 18, color: Color(0xFF475569)),
               SizedBox(width: 8),
               Text(
                 "Rincian Pembayaran",
@@ -914,7 +920,9 @@ class BookReviewView extends GetView<BookReviewController> {
               Text(
                 "Total Biaya Servis & Part ($motorCount Motor)",
                 style: const TextStyle(
-                    fontSize: 12.5, color: Color(0xFF475569)),
+                  fontSize: 12.5,
+                  color: Color(0xFF475569),
+                ),
               ),
               Text(
                 formatRupiah(subtotal),
@@ -1011,11 +1019,7 @@ class BookReviewView extends GetView<BookReviewController> {
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: Color(0xFF64748B),
-                ),
+                Icon(Icons.info_outline, size: 16, color: Color(0xFF64748B)),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(

@@ -237,6 +237,24 @@
       ]
     },
     {
+      "name": "geocoding_darwin",
+      "version": "1.0.3",
+      "dependencies": [
+        "flutter",
+        "geocoding_platform_interface",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "geocoding_android",
+      "version": "5.1.0",
+      "dependencies": [
+        "flutter",
+        "geocoding_platform_interface",
+        "meta"
+      ]
+    },
+    {
       "name": "geocoding_platform_interface",
       "version": "5.0.0",
       "dependencies": [
@@ -266,6 +284,13 @@
       ]
     },
     {
+      "name": "image",
+      "version": "4.10.1",
+      "dependencies": [
+        "archive"
+      ]
+    },
+    {
       "name": "http",
       "version": "1.6.0",
       "dependencies": [
@@ -292,10 +317,39 @@
       ]
     },
     {
+      "name": "path_parsing",
+      "version": "1.1.0",
+      "dependencies": [
+        "meta",
+        "vector_math"
+      ]
+    },
+    {
       "name": "crypto",
       "version": "3.0.7",
       "dependencies": [
         "typed_data"
+      ]
+    },
+    {
+      "name": "bidi",
+      "version": "2.0.13",
+      "dependencies": []
+    },
+    {
+      "name": "barcode",
+      "version": "2.2.9",
+      "dependencies": [
+        "meta",
+        "qr"
+      ]
+    },
+    {
+      "name": "archive",
+      "version": "4.3.0",
+      "dependencies": [
+        "path",
+        "posix"
       ]
     },
     {
@@ -516,6 +570,22 @@
       ]
     },
     {
+      "name": "qr",
+      "version": "3.0.2",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
+      "name": "posix",
+      "version": "6.5.2",
+      "dependencies": [
+        "ffi",
+        "meta",
+        "path"
+      ]
+    },
+    {
       "name": "package_info_plus",
       "version": "10.2.1",
       "dependencies": [
@@ -609,6 +679,11 @@
       "dependencies": []
     },
     {
+      "name": "ffi",
+      "version": "2.2.0",
+      "dependencies": []
+    },
+    {
       "name": "win32",
       "version": "6.4.0",
       "dependencies": [
@@ -625,11 +700,6 @@
         "meta",
         "plugin_platform_interface"
       ]
-    },
-    {
-      "name": "ffi",
-      "version": "2.2.0",
-      "dependencies": []
     },
     {
       "name": "xdg_directories",
@@ -661,76 +731,6 @@
       "version": "0.1.2",
       "dependencies": [
         "ffi"
-      ]
-    },
-    {
-      "name": "geocoding_darwin",
-      "version": "1.0.3",
-      "dependencies": [
-        "flutter",
-        "geocoding_platform_interface",
-        "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "bidi",
-      "version": "2.0.13",
-      "dependencies": []
-    },
-    {
-      "name": "geocoding_android",
-      "version": "5.1.0",
-      "dependencies": [
-        "flutter",
-        "geocoding_platform_interface",
-        "meta"
-      ]
-    },
-    {
-      "name": "path_parsing",
-      "version": "1.1.0",
-      "dependencies": [
-        "meta",
-        "vector_math"
-      ]
-    },
-    {
-      "name": "barcode",
-      "version": "2.2.9",
-      "dependencies": [
-        "meta",
-        "qr"
-      ]
-    },
-    {
-      "name": "qr",
-      "version": "3.0.2",
-      "dependencies": [
-        "meta"
-      ]
-    },
-    {
-      "name": "image",
-      "version": "4.10.1",
-      "dependencies": [
-        "archive"
-      ]
-    },
-    {
-      "name": "archive",
-      "version": "4.3.0",
-      "dependencies": [
-        "path",
-        "posix"
-      ]
-    },
-    {
-      "name": "posix",
-      "version": "6.5.2",
-      "dependencies": [
-        "ffi",
-        "meta",
-        "path"
       ]
     }
   ],
